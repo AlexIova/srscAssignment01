@@ -70,7 +70,7 @@ class Box {
         Set<SocketAddress> outSocketAddressSet = Arrays.stream(destinations.split(",")).map(s -> parseSocketAddress(s)).collect(Collectors.toSet());
 
 		DatagramSocket inSocket = new DatagramSocket(inSocketAddress); 
-        DatagramSocket outSocket = new DatagramSocket();
+    	DatagramSocket outSocket = new DatagramSocket();
         byte[] buffer = new byte[4096];
 		// probably you ned to use a larger buffer for the requirements of
 		// TP1 - remember that you will receive datagrams with encrtypted
@@ -80,30 +80,6 @@ class Box {
 		// Not that this Box is always trying to receive streams
 		// You must modify this to contrl the end of one received
 		// movie) to obtain the related statistics (see PrintStats)
-	
-        /* *** <TEST SENDING ENCRYPTION> *** */
-        // For this test I'll use AES/CBC/PKCS5Padding
-		/*
-        byte[] iv = 
-        {
-			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
-			0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f
-        };
-		IvParameterSpec dps = new IvParameterSpec(iv);
-
-		// Key already given
-		String stringKey = "2b7e151628aed2a6abf71589";
-		Key key = new SecretKeySpec(stringKey.getBytes(), "AES");
-
-		Cipher c = Cipher.getInstance("AES/CTR/noPadding");
-		c.init(Cipher.ENCRYPT_MODE, key, dps);
-
-		byte[] cBuff = new byte[4096];
-
-		*/
-		
-		/* *** </TEST SENDING ENCRYPTION> *** */
-
 
         while (buffer.length > 0 ) {
           	DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
@@ -111,13 +87,6 @@ class Box {
 
           	System.out.print("*"); // Just for debug. Comment for final
 	                         		// observations and statistics
-
-			/* <SEND ENCRYPTION> */
-			/* 
-			cBuff = c.doFinal(buff);			// now should be encrypted
-			p.setData(cBuff, 0, cBuff.length );
-			*/
-			/* </SEND ENCRYPTION> */
 	  
           	for (SocketAddress outSocketAddress : outSocketAddressSet) 
             {
