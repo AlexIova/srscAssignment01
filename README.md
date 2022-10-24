@@ -23,7 +23,10 @@ Taken from other project:
 -[] Check why can't receive anything in box if address different from localhost
 -[] Support for multicast
 -[] Support for unicast
+-[] Statistics
 
 ---
 
 ### StreamServer
+-[] Decrypt movies from movies.cryptoconfing
+-[] Statistics
