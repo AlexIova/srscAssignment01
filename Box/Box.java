@@ -74,7 +74,7 @@ class Box {
 		// System.out.println("inSocketAddress: " + inSocketAddress.toString());
         
 		Set<SocketAddress> outSocketAddressSet = Arrays.stream(destinations.split(",")).map(s -> parseSocketAddress(s)).collect(Collectors.toSet());
-		// System.out.println("outSocketAddressSet: " + outSocketAddressSet.toString());
+		System.out.println("outSocketAddressSet: " + outSocketAddressSet.toString());
 
 		DatagramSocket inSocket = new DatagramSocket(inSocketAddress); 
     	DatagramSocket outSocket = new DatagramSocket();
@@ -88,6 +88,23 @@ class Box {
 		// You must modify this to contrl the end of one received
 		// movie) to obtain the related statistics (see PrintStats)
 
+		/* <Derypto> */
+        byte[] iv  = new byte[]
+		{
+			0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 ,
+			0x0f, 0x0d, 0x0e, 0x0c, 0x0b, 0x0a, 0x09, 0x08 
+		};
+		IvParameterSpec dps = new IvParameterSpec(iv);
+		String stringKey = "b356198719e456a6";
+		Key key = new SecretKeySpec(stringKey.getBytes(), "AES");
+        Cipher c = Cipher.getInstance("AES/OFB/NoPadding");
+		c.init(Cipher.DECRYPT_MODE, key, dps);
+        byte[] dBuff = new byte[4096];
+        /* <Derypto> */
+
+
+
+
         while (buffer.length > 0 ) {
 			// System.out.println("Dopo while");
           	DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
@@ -95,12 +112,18 @@ class Box {
  	  		inSocket.receive(inPacket);  
 			// System.out.println("RECEIVED");
 
+			/* <RECEIVE DECRYPTION> */
+			dBuff = c.doFinal(inPacket.getData());			// now should be decrypted
+			/* </RECEIVE DECRYPTION> */
+
+
           	System.out.print("*"); 	// Just for debug. Comment for final
 	                         		// observations and statistics
 	  
           	for (SocketAddress outSocketAddress : outSocketAddressSet) 
             {
-              outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
+              // outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
+			  outSocket.send(new DatagramPacket(dBuff, inPacket.getLength(), outSocketAddress));
 	    	}
 
 
