@@ -1,3 +1,6 @@
+
+class PrintStats {
+
 /*
  * StreamingServerPrintStats.java 
  * This is an auxiliary class to be used to obtain and to print

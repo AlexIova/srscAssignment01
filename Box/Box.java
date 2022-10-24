@@ -25,7 +25,7 @@ import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 
-class hjBox {
+class Box {
     
     private static InetSocketAddress parseSocketAddress(String socketAddress) 
     {
@@ -81,10 +81,9 @@ class hjBox {
 		// You must modify this to contrl the end of one received
 		// movie) to obtain the related statistics (see PrintStats)
 	
-
         /* *** <TEST SENDING ENCRYPTION> *** */
-
         // For this test I'll use AES/CBC/PKCS5Padding
+		/*
         byte[] iv = 
         {
 			0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
@@ -100,6 +99,8 @@ class hjBox {
 		c.init(Cipher.ENCRYPT_MODE, key, dps);
 
 		byte[] cBuff = new byte[4096];
+
+		*/
 		
 		/* *** </TEST SENDING ENCRYPTION> *** */
 
@@ -112,8 +113,10 @@ class hjBox {
 	                         		// observations and statistics
 
 			/* <SEND ENCRYPTION> */
+			/* 
 			cBuff = c.doFinal(buff);			// now should be encrypted
 			p.setData(cBuff, 0, cBuff.length );
+			*/
 			/* </SEND ENCRYPTION> */
 	  
           	for (SocketAddress outSocketAddress : outSocketAddressSet) 

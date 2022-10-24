@@ -22,7 +22,7 @@
 import java.io.*;
 import java.net.*;
 
-class hjStreamServer {
+class StreamServer {
 
 	public static void main( String []args ) throws Exception {
 	        if (args.length != 3)

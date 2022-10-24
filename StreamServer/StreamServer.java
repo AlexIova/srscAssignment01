@@ -10,7 +10,7 @@
 import java.io.*;
 import java.net.*;
 
-class hjStreamServer {
+class StreamServer {
 
     static public void main( String []args ) throws Exception {
         if (args.length != 3)
@@ -40,13 +40,11 @@ class hjStreamServer {
 	int frate;  // observed frame rate in segments/sec)
 	int tput;   // observed throughput (in Kbytes/sec)
 		
-	DataInputStream g =
-	    new DataInputStream( new FileInputStream(args[0]) );
+	DataInputStream g = new DataInputStream( new FileInputStream(args[0]) );
 	byte[] buff = new byte[4096]; // can change if required
 
 	DatagramSocket s = new DatagramSocket();
-	InetSocketAddress addr =
-	    new InetSocketAddress( args[1], Integer.parseInt(args[2]));
+	InetSocketAddress addr = new InetSocketAddress( args[1], Integer.parseInt(args[2]));
 	DatagramPacket p = new DatagramPacket(buff, buff.length, addr );
 	long t0 = System.nanoTime(); // current time 
 	long q0 = 0;
