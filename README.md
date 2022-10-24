@@ -4,7 +4,7 @@
 
 Just for ease of copy-pasting.
 * StreamServer
-`java StreamServer ./movies/monsters.dat 228.10.10.10 9999`
+`java StreamServer ./movies/monsters.dat localhost 9999`
 
 * Box
 `java Box`
@@ -18,6 +18,10 @@ Taken from other project:
 
 
 ## TODO
+
+### Landmarks
+-[x] Prototype
+
 
 ### Box
 -[] Check why can't receive anything in box if address different from localhost
