@@ -53,8 +53,7 @@ class StreamServer {
 		int tput=0;// achieved throughput in transmissoin in Kbytes/sec
 		    
 		
-		DataInputStream g = new
-		    DataInputStream( new FileInputStream(args[0]) );
+		DataInputStream g = new DataInputStream( new FileInputStream(args[0]) );
 		// The file with the movie-media content (encoded frames)
 		
 		byte[] buff = new byte[4096];
@@ -65,8 +64,7 @@ class StreamServer {
 		// TP1 implementation
 
 		DatagramSocket s = new DatagramSocket();
-		InetSocketAddress addr =
-		    new InetSocketAddress( args[1], Integer.parseInt(args[2]));
+		InetSocketAddress addr = new InetSocketAddress( args[1], Integer.parseInt(args[2]));
 		DatagramPacket p = new DatagramPacket(buff, buff.length, addr );
 		long t0 = System.nanoTime(); //ref time for real-time stream
 		long q0 = 0;
@@ -84,11 +82,11 @@ class StreamServer {
 			// correctly with the required real-time control
 			// (as encoded in segment timestamps)
 			Thread.sleep( Math.max(0, ((time-q0)-(t-t0))/1000000));
-		        // send packet (with a frame payload)		   
+		    // send packet (with a frame payload)		   
 			s.send( p ); // Send UDP datagrams (not protected)
 			
 			System.out.print( "." ); // just for debug
-			// tahe this last line off or any I/O or debug for
+			// take this last line off or any I/O or debug for
 			// final observations in TP1
 
 			System.out.println("DONE! all frames sent: "+count);
@@ -103,7 +101,7 @@ class StreamServer {
 			// experimental anlysis and observations, as observed
 			// in the StreamingServer side
 
-                        //to do this the idea is to support this in a
+            //to do this the idea is to support this in a
 			//method you must implement, inspired in the
 			// following PrintStats() calling it with the
 			// obtained instrumentation variabes during the
@@ -119,19 +117,19 @@ class StreamServer {
 			   int nf, int afs, int ms, int etm, int frate,
 			   int tput)
     {
-        System.out.println("---------------------------------------------");
-	System.out.println("Sreaming Server");
+    	System.out.println("---------------------------------------------");
+		System.out.println("Sreaming Server");
         System.out.println("Statistics / Metrics");
         System.out.println("---------------------------------------------");
-	System.out.println();
-	System.out.println("---------------------------------------------");
-	System.out.println("Streamed media-movie and security configs");
-	System.out.println("---------------------------------------------");
-	System.out.println("Received/Streamed Movie:" + m);
-	System.out.println("Used Ciphersuite /ALG/MODE/PADDING:" + csuite);
-	System.out.println("Used key (hexadecimal rep):" + k);
+		System.out.println();
+		System.out.println("---------------------------------------------");
+		System.out.println("Streamed media-movie and security configs");
+		System.out.println("---------------------------------------------");
+		System.out.println("Received/Streamed Movie:" + m);
+		System.out.println("Used Ciphersuite /ALG/MODE/PADDING:" + csuite);
+		System.out.println("Used key (hexadecimal rep):" + k);
         System.out.println("Key size used:" + ks);	
-	System.out.println("Used secure Hash for integrity check:" + ihcheck);
+		System.out.println("Used secure Hash for integrity check:" + ihcheck);
         System.out.println("---------------------------------------------");
         System.out.println("Performance indicators of processed stream");
         System.out.println("---------------------------------------------");
