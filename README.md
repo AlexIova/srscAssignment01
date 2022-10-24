@@ -20,17 +20,17 @@ Taken from other project:
 ## TODO
 
 ### Landmarks
--[x] Prototype
+- [x] Prototype
 
 
 ### Box
--[] Check why can't receive anything in box if address different from localhost
--[] Support for multicast
--[] Support for unicast
--[] Statistics
+- [ ] Check why can't receive anything in box if address different from localhost
+- [ ] Support for multicast
+- [ ] Support for unicast
+- [ ] Statistics
 
 ---
 
 ### StreamServer
--[] Decrypt movies from movies.cryptoconfing
--[] Statistics
+- [ ] Decrypt movies from movies.cryptoconfing
+- [ ] Statistics
