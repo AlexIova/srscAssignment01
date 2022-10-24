@@ -63,11 +63,18 @@ class Box {
         }
         Properties properties = new Properties();
         properties.load(inputStream);
+		
 		String remote = properties.getProperty("remote");
-        String destinations = properties.getProperty("localdelivery");
-
-        SocketAddress inSocketAddress = parseSocketAddress(remote);
-        Set<SocketAddress> outSocketAddressSet = Arrays.stream(destinations.split(",")).map(s -> parseSocketAddress(s)).collect(Collectors.toSet());
+		// System.out.println("REMOTE: " + remote);
+        
+		String destinations = properties.getProperty("localdelivery");
+		// System.out.println("LOCALDELIVERY: " + destinations);
+        
+		SocketAddress inSocketAddress = parseSocketAddress(remote);		// If receiveing unicast
+		// System.out.println("inSocketAddress: " + inSocketAddress.toString());
+        
+		Set<SocketAddress> outSocketAddressSet = Arrays.stream(destinations.split(",")).map(s -> parseSocketAddress(s)).collect(Collectors.toSet());
+		// System.out.println("outSocketAddressSet: " + outSocketAddressSet.toString());
 
 		DatagramSocket inSocket = new DatagramSocket(inSocketAddress); 
     	DatagramSocket outSocket = new DatagramSocket();
@@ -82,10 +89,13 @@ class Box {
 		// movie) to obtain the related statistics (see PrintStats)
 
         while (buffer.length > 0 ) {
+			// System.out.println("Dopo while");
           	DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
+			// System.out.println("Taking packet");
  	  		inSocket.receive(inPacket);  
+			// System.out.println("RECEIVED");
 
-          	System.out.print("*"); // Just for debug. Comment for final
+          	System.out.print("*"); 	// Just for debug. Comment for final
 	                         		// observations and statistics
 	  
           	for (SocketAddress outSocketAddress : outSocketAddressSet) 
