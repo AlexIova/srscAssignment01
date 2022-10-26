@@ -43,7 +43,8 @@ class StreamServer {
 
 		int BUFF_SIZE = 8192;
 		
-		/* TEST PARSER */
+		/* TEST PARSER movies-cryptoconfig*/
+		/*
 		Properties properties = parseMoviesConfig(args[0]);
 		System.out.println(properties.getProperty("ciphersuite"));
 		System.out.println(properties.getProperty("key"));
@@ -52,7 +53,8 @@ class StreamServer {
 		System.out.println(properties.getProperty("integrity-ckeck"));
 		System.out.println(properties.getProperty("mackey"));
 		System.exit(-1);
-		/* /TEST PARSER */
+		*/
+		/* /TEST PARSER movies-cryptoconfig*/
 
 		/*
         // Variables for instrumentation parameters and
