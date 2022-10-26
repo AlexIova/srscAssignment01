@@ -25,6 +25,7 @@ import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import java.util.Arrays;
+import java.util.Properties;
 
 class StreamServer {
 
@@ -39,7 +40,20 @@ class StreamServer {
 		int size=0;
 		int count=0;
  		long time=0;
+
+		int BUFF_SIZE = 8192;
 		
+		/* TEST PARSER */
+		Properties properties = parseMoviesConfig(args[0]);
+		System.out.println(properties.getProperty("ciphersuite"));
+		System.out.println(properties.getProperty("key"));
+		System.out.println(properties.getProperty("iv"));
+		System.out.println(properties.getProperty("integrity"));
+		System.out.println(properties.getProperty("integrity-ckeck"));
+		System.out.println(properties.getProperty("mackey"));
+		System.exit(-1);
+		/* /TEST PARSER */
+
 		/*
         // Variables for instrumentation parameters and
 		// statistics. This instrumentation must be implemented
@@ -60,7 +74,7 @@ class StreamServer {
 		DataInputStream g = new DataInputStream( new FileInputStream(args[0]) );
 		// The file with the movie-media content (encoded frames)
 		
-		byte[] buff = new byte[4096];
+		byte[] buff = new byte[BUFF_SIZE];
 		// Probably you must use a bigger buff size for the
 		// purpose of TP1, because in the TP1 you will use the
 		// buffer to process encrypted streams together with
@@ -84,10 +98,8 @@ class StreamServer {
 		Key key = new SecretKeySpec(stringKey.getBytes(), "AES");
 		Cipher c = Cipher.getInstance("AES/OFB/NoPadding");
 		c.init(Cipher.ENCRYPT_MODE, key, dps);
-		byte[] cBuff = new byte[4096];
+		byte[] cBuff = new byte[BUFF_SIZE];
 		/* </Crypto> */
-
-		System.out.println("WTF");
 
 		while ( g.available() > 0 ) { //while I have segments to read
 			size = g.readShort();
@@ -169,6 +181,50 @@ class StreamServer {
         System.out.println("Observed troughput (KBytes/sec)" + tput);
         System.out.println("---------------------------------------------");
     }
+
+
+
+	public static Properties parseMoviesConfig(String moviePath){
+		Properties properties = new Properties();
+
+		String movie = moviePath.substring(moviePath.lastIndexOf('/') + 1).trim();
+
+		System.out.println(movie);
+
+		String start = "<" + movie + ">";
+		String finish = "</" + movie + ">";
+		try {
+			BufferedReader br = new BufferedReader(new FileReader("./configs/movies-cryptoconfig"));
+			StringBuilder sb = new StringBuilder();
+			String currentLine;
+	
+			// find beginning
+			while ((currentLine = br.readLine()) != null && !(currentLine.contains(start))) {
+				;
+			}
+
+			// find end
+			while ((currentLine = br.readLine()) != null && !(currentLine.contains(finish))) {
+				sb.append(currentLine);
+				sb.append("\n");
+			}
+
+			if(sb.length() == 0){
+				System.out.println("Can't find movie in movies-cryptoconfig file");
+				System.exit(-1);
+			}
+			
+			properties.load(new ByteArrayInputStream( sb.toString().getBytes() ));
+
+			br.close();
+		} 
+		catch (Exception e) {
+			System.out.println("movies-cryptoconfig file not found");
+		}
+
+		return properties;
+	}
+
 }
 
 

@@ -55,6 +55,8 @@ class Box {
         int tput;   // observed throughput in the channel (in Kbytes/sec)
         int corruptedframes;   // Nr of corrupted frames discarded (not sent to the media player
 		// can add more instrumentation variables considered as interesting
+
+		int BUFF_SIZE = 8192;
 	
         InputStream inputStream = new FileInputStream("configs/config.properties");
         if (inputStream == null) {
@@ -78,7 +80,7 @@ class Box {
 
 		DatagramSocket inSocket = new DatagramSocket(inSocketAddress); 
     	DatagramSocket outSocket = new DatagramSocket();
-        byte[] buffer = new byte[4096];
+        byte[] buffer = new byte[BUFF_SIZE];
 		// probably you ned to use a larger buffer for the requirements of
 		// TP1 - remember that you will receive datagrams with encrtypted
 		// contents, so depending on the crypti configurations, the datagrams
@@ -99,7 +101,7 @@ class Box {
 		Key key = new SecretKeySpec(stringKey.getBytes(), "AES");
         Cipher c = Cipher.getInstance("AES/OFB/NoPadding");
 		c.init(Cipher.DECRYPT_MODE, key, dps);
-        byte[] dBuff = new byte[4096];
+        byte[] dBuff = new byte[BUFF_SIZE];
         /* <Derypto> */
 
 

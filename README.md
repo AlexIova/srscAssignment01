@@ -33,6 +33,6 @@ Taken from other project:
 ---
 
 ### StreamServer
-- [ ] Parser movies.cryptoconfig
+- [x] Parser movies.cryptoconfig
 - [ ] Decrypt movies from movies.cryptoconfing
 - [ ] Statistics
