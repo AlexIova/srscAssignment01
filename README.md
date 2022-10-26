@@ -22,6 +22,7 @@ Taken from other project:
 ### Landmarks
 - [x] Prototype
 
+---
 
 ### Box
 - [ ] Check why can't receive anything in box if address different from localhost
