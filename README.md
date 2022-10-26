@@ -9,6 +9,9 @@ Just for ease of copy-pasting.
 * Box
 `java Box`
 
+* openssl
+
+
 ## NOTE
 Previous config:
 localdelivery:224.7.7.7:7777
@@ -35,4 +38,7 @@ Taken from other project:
 ### StreamServer
 - [x] Parser movies.cryptoconfig
 - [ ] Decrypt movies from movies.cryptoconfing
+- [ ] Check integrity after decrypting
 - [ ] Statistics
+- [ ] Delete movie after decrypted
+- [ ] Can't encrypt/decrypt with RC6/CTR/NoPadding
