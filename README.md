@@ -23,6 +23,7 @@ remote:228.10.10.10:9999    \
 * Can't decrypt/encrypt with RC6/CTR/NoPadding, not available
 * Can't check integrity with `SHA256` it has to be written as `SHA-256`
 * Can't check integrity with `HMAC-SHA1` it has to be written as `HmacSHA1`
+* Is the Box supposed to send every stream at the same time?
 
 
 ## TODO
