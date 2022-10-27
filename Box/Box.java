@@ -20,10 +20,12 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
+import java.util.Random;
 import java.util.stream.Collectors;
 import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
+import java.security.spec.InvalidKeySpecException;
 
 class Box {
     
@@ -67,6 +69,15 @@ class Box {
         Properties properties = new Properties();
         properties.load(inputStream);
 		*/
+
+		/* <PBE> */
+		PBEencryption("configs/box-cryptoconfig", "password");
+		PBEdecryption("configs/box-cryptoconfig.enc", "password");
+		System.exit(-1);
+		/* </PBE> */
+
+
+
 
 		ArrayList<Properties> listAddr = parserProperties("configs/config.properties");
 
@@ -245,6 +256,89 @@ class Box {
 
 		return properties;
 
+	}
+
+
+	public static void PBEencryption(String path, String password){
+		try
+		{
+			FileInputStream inFile = new FileInputStream(path);
+			FileOutputStream outFile = new FileOutputStream(path + ".enc");
+			PBEKeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray());
+			SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBEWithMD5AndTripleDES");
+			SecretKey secretKey = secretKeyFactory.generateSecret(pbeKeySpec);
+			byte[] salt = new byte[8];
+			Random random = new Random();
+			random.nextBytes(salt);
+			PBEParameterSpec pbeParameterSpec = new PBEParameterSpec(salt, 100);
+			Cipher cipher = Cipher.getInstance("PBEWithMD5AndTripleDES");
+			cipher.init(Cipher.ENCRYPT_MODE, secretKey, pbeParameterSpec);
+
+			outFile.write(salt);
+			
+			byte[] input = new byte[64];
+			int bytesRead;
+			while ((bytesRead = inFile.read(input)) != -1) {
+				byte[] output = cipher.update(input, 0, bytesRead);
+				if (output != null)
+					outFile.write(output);
+			}
+			byte[] output = cipher.doFinal();
+			if (output != null)
+				outFile.write(output);
+
+			inFile.close();
+			outFile.flush();
+			outFile.close();
+
+		}
+		catch (Exception e){
+			System.out.println("Errror in encryption");
+		}
+		
+	}
+
+
+	public static void PBEdecryption(String path, String password){
+		try
+		{
+			PBEKeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray());
+			SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBEWithMD5AndTripleDES");
+			SecretKey secretKey = secretKeyFactory.generateSecret(pbeKeySpec);
+			FileInputStream fis = new FileInputStream(path);
+			byte[] salt = new byte[8];
+			fis.read(salt);
+			PBEParameterSpec pbeParameterSpec = new PBEParameterSpec(salt, 100);
+
+			Cipher cipher = Cipher.getInstance("PBEWithMD5AndTripleDES");
+
+			cipher.init(Cipher.DECRYPT_MODE, secretKey, pbeParameterSpec);
+
+			FileOutputStream fos = new FileOutputStream(path + ".dec");
+			byte[] in = new byte[64];
+			int read;
+			while ((read = fis.read(in)) != -1) {
+				byte[] output = cipher.update(in, 0, read);
+				if (output != null)
+					fos.write(output);
+			}
+			byte[] output = cipher.doFinal();
+
+			if (output != null)
+				fos.write(output);
+
+			fis.close();
+			fos.flush();
+			fos.close();
+
+		}
+		catch ( NoSuchAlgorithmException | BadPaddingException 
+				| IllegalBlockSizeException | InvalidAlgorithmParameterException
+				| InvalidKeyException | NoSuchPaddingException | InvalidKeySpecException
+				| IOException e){
+			System.out.println("Errror in decryption: " + e);
+		}
+		
 	}
 
 }
