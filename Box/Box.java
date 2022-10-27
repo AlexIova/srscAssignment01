@@ -166,12 +166,12 @@ class Box {
 					continue;
 				}		
 				sb.append(currentLine + "\n");
-			}
+				System.out.println(sb.toString());
 
-			if(sb.length() == 0){
-				System.out.println("Can't find movie in movies-cryptoconfig file");
-				System.exit(-1);
 			}
+			Properties prop = new Properties();
+			prop.load(new ByteArrayInputStream( sb.toString().getBytes()));
+			listProp.add(prop);
 			
 			System.out.println("----- PARSED (config.properties):\n" + listProp.toString() + "\n\n");
 
