@@ -27,6 +27,9 @@ import javax.crypto.spec.*;
 import java.util.Arrays;
 import java.util.Properties;
 
+
+
+
 class StreamServer {
 
 	public static void main( String []args ) throws Exception {
@@ -43,27 +46,13 @@ class StreamServer {
 
 		int BUFF_SIZE = 8192;
 		
-		/* TEST PARSER movies-cryptoconfig*/
-		/*
-		Properties properties = parseMoviesConfig(args[0]);
-		System.out.println(properties.getProperty("ciphersuite"));
-		System.out.println(properties.getProperty("key"));
-		System.out.println(properties.getProperty("iv"));
-		System.out.println(properties.getProperty("integrity"));
-		System.out.println(properties.getProperty("integrity-ckeck"));
-		System.out.println(properties.getProperty("mackey"));
-		System.exit(-1);
-		*/
-		/* /TEST PARSER movies-cryptoconfig*/
 
-		/*
-        // Variables for instrumentation parameters and
-		// statistics. This instrumentation must be implemented
-		// for TP1
+		Properties properties = parseMoviesConfig(args[0]);
+
 		String movie = "";
-		String ciphersuite=""; //configured ciphersuite
-		String hcheck=""; //config. cryptographic hash function
-		String key=""; //configured key in hexadecimal representation
+		String ciphersuite= properties.getProperty("ciphersuite"); //configured ciphersuite
+		String hcheck=properties.getProperty("integrity"); //config. cryptographic hash function
+		String key=properties.getProperty("key"); //configured key in hexadecimal representation
 		int ksize=0; //key size used
 		int nf=0; // number of sent frames in the stream
 		int afs=0; // average size of sent frames
@@ -71,9 +60,47 @@ class StreamServer {
 		int etm=0; // total elapsed time of the sent movie
 		int frate=0; // achieved frame rate in #frames/sec
 		int tput=0;// achieved throughput in transmissoin in Kbytes/sec
+
+		String iv = properties.getProperty("iv");
+		String integrity_check = properties.getProperty("integrity-check");
+		String mackey = properties.getProperty("mackey");
+
+		System.out.println("----- PROPERTIES:");
+		System.out.println("ciphersuite: " + ciphersuite);
+		System.out.println("key: " + key);
+		System.out.println("iv: " + iv);
+		System.out.println("hcheck: " + hcheck);
+		System.out.println("integrity-check: " + integrity_check);
+		System.out.println("mackey: " + mackey);
+		System.out.println("\n\n");
+
+
+		/* <Test Encryption movie> */
+		/*
+		String algorithm = ciphersuite.substring(0 , ciphersuite.indexOf("/"));
+		encryptMovie(args[0], algorithm, ciphersuite, key, iv, hcheck, integrity_check);
+		// System.exit(-1);
 		*/
+		/* </Test Encryption movie> */
+
+		/* <Test integrity> */
+		if(verifyMovie(hcheck, integrity_check, args[0], mackey)){
+			System.out.println("OK! Verified.");
+		} else {
+			System.out.println("Something went wrong with integrity check...");
+		}
+		System.exit(-1);
+		/* </Test integrity> */
+
+		/* <Test Decryption movie> */
+		String algorithm = ciphersuite.substring(0 , ciphersuite.indexOf("/"));
+		decryptMovie(args[0], algorithm, ciphersuite, key, iv, hcheck, integrity_check);
+		// System.exit(-1);
+		/* </Test Decryption movie> */
+
 		
-		DataInputStream g = new DataInputStream( new FileInputStream(args[0]) );
+		
+		DataInputStream g = new DataInputStream( new FileInputStream(args[0] + ".dec") );
 		// The file with the movie-media content (encoded frames)
 		
 		byte[] buff = new byte[BUFF_SIZE];
@@ -90,6 +117,7 @@ class StreamServer {
 		long q0 = 0;
 
 		/* <Crypto> */
+		/*
 		byte[] ivBytes  = new byte[]
 		{
 			0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 ,
@@ -101,6 +129,7 @@ class StreamServer {
 		Cipher c = Cipher.getInstance("AES/OFB/NoPadding");
 		c.init(Cipher.ENCRYPT_MODE, key, dps);
 		byte[] cBuff = new byte[BUFF_SIZE];
+		*/
 		/* </Crypto> */
 
 		while ( g.available() > 0 ) { //while I have segments to read
@@ -113,8 +142,10 @@ class StreamServer {
 			// p.setData(buff, 0, size );   Commented to make space for Crypto
 			
 			/* <Crypto> */
+			/*
 			cBuff = c.doFinal(buff);
 			p.setData(cBuff, 0, cBuff.length );
+			*/
 			/* </Crypto> */
 
 			p.setSocketAddress( addr );  //build the dgram packet
@@ -191,8 +222,6 @@ class StreamServer {
 
 		String movie = moviePath.substring(moviePath.lastIndexOf('/') + 1).trim();
 
-		System.out.println(movie);
-
 		String start = "<" + movie + ">";
 		String finish = "</" + movie + ">";
 		try {
@@ -218,6 +247,8 @@ class StreamServer {
 			
 			properties.load(new ByteArrayInputStream( sb.toString().getBytes() ));
 
+			System.out.println("----- PARSED:\n" + sb.toString() + "\n\n");
+
 			br.close();
 		} 
 		catch (Exception e) {
@@ -227,7 +258,149 @@ class StreamServer {
 		return properties;
 	}
 
+
+	public static void decryptMovie(String path, String algorithm , 
+									String ciphersuite, String key, 
+									String iv, String fIntegrity, 
+									String integrity_check) throws CryptoException{
+		try
+		{
+			String decMovie = path + ".dec";
+			File encMovie = new File(path);
+			IvParameterSpec ivSpec = new IvParameterSpec(hexStringToByteArray(iv));
+			Key secretKey = new SecretKeySpec(hexStringToByteArray(key), algorithm);
+
+			Cipher cipher = Cipher.getInstance(ciphersuite);
+			cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec);
+
+			FileInputStream inputStream = new FileInputStream(encMovie);
+			byte[] inputBytes = new byte[(int) encMovie.length()];
+			inputStream.read(inputBytes);
+			inputStream.close();
+			
+
+			byte[] outputBytes = cipher.doFinal(inputBytes);
+
+			FileOutputStream outputStream = new FileOutputStream(decMovie);
+			outputStream.write(outputBytes);
+			outputStream.close();
+
+		}
+		catch (NoSuchPaddingException | NoSuchAlgorithmException 
+				| InvalidKeyException | BadPaddingException
+				| IllegalBlockSizeException
+			 	| InvalidAlgorithmParameterException | IOException ex)
+		{
+			throw new CryptoException("Error encrypting/decrypting file", ex);
+		}
+	}
+
+	public static void encryptMovie(String path, String algorithm, 
+									String ciphersuite, String key, 
+									String iv, String fIntegrity, 
+									String integrity_check) throws CryptoException{
+		try
+		{
+			String encMovie = path + ".encrypted";
+			File plainMovie = new File(path);
+			IvParameterSpec ivSpec = new IvParameterSpec(hexStringToByteArray(iv));
+			Key secretKey = new SecretKeySpec(hexStringToByteArray(key), algorithm);
+
+			Cipher cipher = Cipher.getInstance(ciphersuite);
+			cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
+
+			FileInputStream inputStream = new FileInputStream(plainMovie);
+			byte[] inputBytes = new byte[(int) plainMovie.length()];
+			inputStream.read(inputBytes);
+			inputStream.close();
+			
+
+			byte[] outputBytes = cipher.doFinal(inputBytes);
+
+			FileOutputStream outputStream = new FileOutputStream(encMovie);
+			outputStream.write(outputBytes);
+			outputStream.close();
+
+		}
+		catch (NoSuchPaddingException | NoSuchAlgorithmException 
+				| InvalidKeyException | BadPaddingException
+				| IllegalBlockSizeException
+			 	| InvalidAlgorithmParameterException | IOException ex)
+		{
+			throw new CryptoException("Error encrypting/decrypting file", ex);
+		}
+	}
+
+	// Found on stackOverflow
+	public static byte[] hexStringToByteArray(String s) {
+		byte[] b = new byte[s.length() / 2];
+		for (int i = 0; i < b.length; i++) {
+		  int index = i * 2;
+		  int v = Integer.parseInt(s.substring(index, index + 2), 16);
+		  b[i] = (byte) v;
+		}
+		return b;
+	}
+
+	public static boolean verifyHash(String hCheck, String integrity_check, String path) throws CryptoException{
+		try
+		{
+			File plainMovie = new File(path);
+			FileInputStream inputStream = new FileInputStream(plainMovie);
+			byte[] inputBytes = new byte[(int) plainMovie.length()];
+			MessageDigest hash = MessageDigest.getInstance(hCheck);
+			byte[] plainDigest = hash.digest(inputBytes);
+			inputStream.close();
+
+			System.out.println("----- INTEGRITY (HASH):");
+			System.out.println("plainDigest: " + plainDigest.toString());
+			System.out.println("integrity_check: " + hexStringToByteArray(integrity_check).toString());
+			System.out.println("\n\n");
+
+			return MessageDigest.isEqual(plainDigest, hexStringToByteArray(integrity_check));
+		}
+		catch (NoSuchAlgorithmException | IOException ex ){
+			throw new CryptoException("Error encrypting/decrypting file", ex);
+		}
+
+	}
+
+	public static boolean verifyMac(String hCheck, String integrity_check, String path, String macKey) throws CryptoException{
+		try
+		{
+			File plainMovie = new File(path);
+			FileInputStream inputStream = new FileInputStream(plainMovie);
+			byte[] inputBytes = new byte[(int) plainMovie.length()];
+			Mac hMac = Mac.getInstance(hCheck);
+			inputStream.close();
+			Key hMacKey = new SecretKeySpec(hexStringToByteArray(macKey), hCheck);
+			hMac.init(hMacKey);
+			byte[] plainDigest = hMac.doFinal(inputBytes);
+			inputStream.close();
+
+			System.out.println("----- INTEGRITY (HMAC):");
+			System.out.println("plainDigest: " + plainDigest.toString());
+			System.out.println("integrity_check: " + hexStringToByteArray(integrity_check).toString());
+			System.out.println("\n\n");
+
+			return Arrays.equals(plainDigest, hexStringToByteArray(integrity_check));
+		} 
+		catch (NoSuchAlgorithmException | InvalidKeyException | IOException ex){
+			throw new CryptoException("Error encrypting/decrypting file", ex);
+		}
+	}
+
+
+	public static boolean verifyMovie(String hCheck, String integrity_check, String path, String macKey) throws CryptoException{
+		if(macKey.equals("NULL")){
+			return verifyHash(hCheck, integrity_check, path); 
+		} else {
+			return verifyMac(hCheck, integrity_check, path, macKey);
+		}
+	}
+	
 }
+
 
 
 

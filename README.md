@@ -17,7 +17,9 @@ Previous config:
 localdelivery:224.7.7.7:7777
 remote:228.10.10.10:9999
 
-Taken from other project:
+* Can't decrypt/encrypt with RC6/CTR/NoPadding, not available
+* Can't check integrity with `SHA256` it has to be written as `SHA-256`
+* Can't check integrity with `HMAC-SHA1` it has to be written as `HmacSHA1`
 
 
 ## TODO
@@ -37,7 +39,7 @@ Taken from other project:
 
 ### StreamServer
 - [x] Parser movies.cryptoconfig
-- [ ] Decrypt movies from movies.cryptoconfing
+- [x] Decrypt movies from movies.cryptoconfing
 - [ ] Check integrity after decrypting
 - [ ] Statistics
 - [ ] Delete movie after decrypted

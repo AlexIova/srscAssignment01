@@ -91,6 +91,7 @@ class Box {
 		// movie) to obtain the related statistics (see PrintStats)
 
 		/* <Derypto> */
+		/*
         byte[] iv  = new byte[]
 		{
 			0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 ,
@@ -102,6 +103,7 @@ class Box {
         Cipher c = Cipher.getInstance("AES/OFB/NoPadding");
 		c.init(Cipher.DECRYPT_MODE, key, dps);
         byte[] dBuff = new byte[BUFF_SIZE];
+		*/
         /* <Derypto> */
 
 
@@ -115,7 +117,9 @@ class Box {
 			// System.out.println("RECEIVED");
 
 			/* <RECEIVE DECRYPTION> */
+			/*
 			dBuff = c.doFinal(inPacket.getData());			// now should be decrypted
+			*/
 			/* </RECEIVE DECRYPTION> */
 
 
@@ -125,7 +129,7 @@ class Box {
           	for (SocketAddress outSocketAddress : outSocketAddressSet) 
             {
               // outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
-			  outSocket.send(new DatagramPacket(dBuff, inPacket.getLength(), outSocketAddress));
+			  outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
 	    	}
 
 
