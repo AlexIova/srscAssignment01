@@ -1,0 +1,11 @@
+localdelivery: localhost:8888
+remote: localhost:9999
+---
+localdelivery: 192.168.1.7:9999
+remote: 193.136.122:9876
+---
+localdelivery: 224.7.7.7:7777
+remote: 198.10.4.26:9999
+---
+localdelivery: 224.7.7.7:7777
+remote: 236.16.20.30:9999
