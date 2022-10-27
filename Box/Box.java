@@ -9,8 +9,7 @@
  * in TP1, according to the TP1 requirements
  */
 
-import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.*;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.MulticastSocket;
@@ -18,6 +17,7 @@ import java.net.InetSocketAddress;
 import java.net.InetAddress;
 import java.net.SocketAddress;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,6 +58,7 @@ class Box {
 
 		int BUFF_SIZE = 8192;
 	
+		/*
         InputStream inputStream = new FileInputStream("configs/config.properties");
         if (inputStream == null) {
             System.err.println("Configuration file not found!");
@@ -65,79 +66,122 @@ class Box {
         }
         Properties properties = new Properties();
         properties.load(inputStream);
-		
-		String remote = properties.getProperty("remote");
-		// System.out.println("REMOTE: " + remote);
-        
-		String destinations = properties.getProperty("localdelivery");
-		// System.out.println("LOCALDELIVERY: " + destinations);
-        
-		SocketAddress inSocketAddress = parseSocketAddress(remote);		// If receiveing unicast
-		// System.out.println("inSocketAddress: " + inSocketAddress.toString());
-        
-		Set<SocketAddress> outSocketAddressSet = Arrays.stream(destinations.split(",")).map(s -> parseSocketAddress(s)).collect(Collectors.toSet());
-		System.out.println("outSocketAddressSet: " + outSocketAddressSet.toString());
-
-		DatagramSocket inSocket = new DatagramSocket(inSocketAddress); 
-    	DatagramSocket outSocket = new DatagramSocket();
-        byte[] buffer = new byte[BUFF_SIZE];
-		// probably you ned to use a larger buffer for the requirements of
-		// TP1 - remember that you will receive datagrams with encrtypted
-		// contents, so depending on the crypti configurations, the datagrams
-		// will be bigger than the plaintext data in the initial example.
-
-		// Not that this Box is always trying to receive streams
-		// You must modify this to contrl the end of one received
-		// movie) to obtain the related statistics (see PrintStats)
-
-		/* <Derypto> */
-		/*
-        byte[] iv  = new byte[]
-		{
-			0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 ,
-			0x0f, 0x0d, 0x0e, 0x0c, 0x0b, 0x0a, 0x09, 0x08 
-		};
-		IvParameterSpec dps = new IvParameterSpec(iv);
-		String stringKey = "b356198719e456a6";
-		Key key = new SecretKeySpec(stringKey.getBytes(), "AES");
-        Cipher c = Cipher.getInstance("AES/OFB/NoPadding");
-		c.init(Cipher.DECRYPT_MODE, key, dps);
-        byte[] dBuff = new byte[BUFF_SIZE];
 		*/
-        /* <Derypto> */
+
+		ArrayList<Properties> listAddr = parserProperties("configs/config.properties");
+		System.exit(-1);
+		
+		// String remote = properties.getProperty("remote");
+		// // System.out.println("REMOTE: " + remote);
+        
+		// String destinations = properties.getProperty("localdelivery");
+		// // System.out.println("LOCALDELIVERY: " + destinations);
+        
+		// SocketAddress inSocketAddress = parseSocketAddress(remote);		// If receiveing unicast
+		// // System.out.println("inSocketAddress: " + inSocketAddress.toString());
+        
+		// Set<SocketAddress> outSocketAddressSet = Arrays.stream(destinations.split(",")).map(s -> parseSocketAddress(s)).collect(Collectors.toSet());
+		// System.out.println("outSocketAddressSet: " + outSocketAddressSet.toString());
+
+		// DatagramSocket inSocket = new DatagramSocket(inSocketAddress); 
+    	// DatagramSocket outSocket = new DatagramSocket();
+        // byte[] buffer = new byte[BUFF_SIZE];
+		// // probably you ned to use a larger buffer for the requirements of
+		// // TP1 - remember that you will receive datagrams with encrtypted
+		// // contents, so depending on the crypti configurations, the datagrams
+		// // will be bigger than the plaintext data in the initial example.
+
+		// // Not that this Box is always trying to receive streams
+		// // You must modify this to contrl the end of one received
+		// // movie) to obtain the related statistics (see PrintStats)
+
+		// /* <Derypto> */
+		// /*
+        // byte[] iv  = new byte[]
+		// {
+		// 	0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 ,
+		// 	0x0f, 0x0d, 0x0e, 0x0c, 0x0b, 0x0a, 0x09, 0x08 
+		// };
+		// IvParameterSpec dps = new IvParameterSpec(iv);
+		// String stringKey = "b356198719e456a6";
+		// Key key = new SecretKeySpec(stringKey.getBytes(), "AES");
+        // Cipher c = Cipher.getInstance("AES/OFB/NoPadding");
+		// c.init(Cipher.DECRYPT_MODE, key, dps);
+        // byte[] dBuff = new byte[BUFF_SIZE];
+		// */
+        // /* <Derypto> */
 
 
 
 
-        while (buffer.length > 0 ) {
-			// System.out.println("Dopo while");
-          	DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
-			// System.out.println("Taking packet");
- 	  		inSocket.receive(inPacket);  
-			// System.out.println("RECEIVED");
+        // while (buffer.length > 0 ) {
+		// 	// System.out.println("Dopo while");
+        //   	DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
+		// 	// System.out.println("Taking packet");
+ 	  	// 	inSocket.receive(inPacket);  
+		// 	// System.out.println("RECEIVED");
 
-			/* <RECEIVE DECRYPTION> */
-			/*
-			dBuff = c.doFinal(inPacket.getData());			// now should be decrypted
-			*/
-			/* </RECEIVE DECRYPTION> */
+		// 	/* <RECEIVE DECRYPTION> */
+		// 	/*
+		// 	dBuff = c.doFinal(inPacket.getData());			// now should be decrypted
+		// 	*/
+		// 	/* </RECEIVE DECRYPTION> */
 
 
-          	System.out.print("*"); 	// Just for debug. Comment for final
-	                         		// observations and statistics
+        //   	System.out.print("*"); 	// Just for debug. Comment for final
+	    //                      		// observations and statistics
 	  
-          	for (SocketAddress outSocketAddress : outSocketAddressSet) 
-            {
-              // outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
-			  outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
-	    	}
+        //   	for (SocketAddress outSocketAddress : outSocketAddressSet) 
+        //     {
+        //       // outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
+		// 	  outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
+	    // 	}
 
 
-		// TODO: You must control/detect the end of a streamed movie to
-		// call PrintStats to print the obtained statistics from
-		// required instrumentation variables for experimental observations
+		// // TODO: You must control/detect the end of a streamed movie to
+		// // call PrintStats to print the obtained statistics from
+		// // required instrumentation variables for experimental observations
 
-		// PrintStats (......)
-		}
+		// // PrintStats (......)
+		// }
     }
+
+
+	public static ArrayList<Properties> parserProperties(String path){
+		ArrayList<Properties> listProp = new ArrayList<Properties>();
+
+		try {
+			BufferedReader br = new BufferedReader(new FileReader("./configs/config.properties"));
+			StringBuilder sb = new StringBuilder();
+			String currentLine;
+
+			// find sections
+			while ((currentLine = br.readLine()) != null){
+				if (currentLine.contains("---")){
+					Properties prop = new Properties();
+					prop.load(new ByteArrayInputStream( sb.toString().getBytes()));
+					listProp.add(prop);
+
+					sb.setLength(0);
+					continue;
+				}		
+				sb.append(currentLine + "\n");
+			}
+
+			if(sb.length() == 0){
+				System.out.println("Can't find movie in movies-cryptoconfig file");
+				System.exit(-1);
+			}
+			
+			System.out.println("----- PARSED (config.properties):\n" + listProp.toString() + "\n\n");
+
+			br.close();
+		} 
+		catch (Exception e) {
+			System.out.println("movies-cryptoconfig file not found");
+		}
+
+		return listProp;
+	}
+
 }
