@@ -26,6 +26,8 @@ import javax.crypto.*;
 import javax.crypto.spec.*;
 import java.util.Arrays;
 import java.util.Properties;
+import java.nio.charset.StandardCharsets;
+
 
 
 
@@ -83,24 +85,29 @@ class StreamServer {
 		*/
 		/* </Test Encryption movie> */
 
+
+
+		/* <Test Decryption movie> */
+		String algorithm = ciphersuite.substring(0 , ciphersuite.indexOf("/"));
+		decryptMovie(args[0], algorithm, ciphersuite, key, iv, hcheck, integrity_check);
+		String decName = args[0] + ".dec";
+		// System.exit(-1);
+		/* </Test Decryption movie> */
+
+
+
 		/* <Test integrity> */
-		if(verifyMovie(hcheck, integrity_check, args[0], mackey)){
+		// System.out.println("Check: " + hexStringToByteArray(integrity_check).toString());
+		if(verifyMovie(hcheck, integrity_check, decName, mackey)){
 			System.out.println("OK! Verified.");
 		} else {
 			System.out.println("Something went wrong with integrity check...");
 		}
 		System.exit(-1);
 		/* </Test integrity> */
-
-		/* <Test Decryption movie> */
-		String algorithm = ciphersuite.substring(0 , ciphersuite.indexOf("/"));
-		decryptMovie(args[0], algorithm, ciphersuite, key, iv, hcheck, integrity_check);
-		// System.exit(-1);
-		/* </Test Decryption movie> */
-
 		
 		
-		DataInputStream g = new DataInputStream( new FileInputStream(args[0] + ".dec") );
+		DataInputStream g = new DataInputStream( new FileInputStream(decName) );
 		// The file with the movie-media content (encoded frames)
 		
 		byte[] buff = new byte[BUFF_SIZE];
@@ -342,22 +349,41 @@ class StreamServer {
 		return b;
 	}
 
+	// Found on stackOverflow
+	public static String bytesToHex(byte[] bytes) {
+		byte[] HEX_ARRAY = "0123456789abcdef".getBytes(StandardCharsets.US_ASCII);
+		byte[] hexChars = new byte[bytes.length * 2];
+		for (int j = 0; j < bytes.length; j++) {
+			int v = bytes[j] & 0xFF;
+			hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+			hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+		}
+		return new String(hexChars, StandardCharsets.UTF_8);
+	}
+
 	public static boolean verifyHash(String hCheck, String integrity_check, String path) throws CryptoException{
 		try
 		{
-			File plainMovie = new File(path);
-			FileInputStream inputStream = new FileInputStream(plainMovie);
-			byte[] inputBytes = new byte[(int) plainMovie.length()];
-			MessageDigest hash = MessageDigest.getInstance(hCheck);
-			byte[] plainDigest = hash.digest(inputBytes);
+			byte[] buffer= new byte[8192];
+			int count;
+			MessageDigest digest = MessageDigest.getInstance(hCheck);
+			BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(path));
+
+
+			while ((count = inputStream.read(buffer)) != -1) {
+				digest.update(buffer, 0, count);
+			}
+
 			inputStream.close();
+		
+			byte[] plainDigest = digest.digest();
 
 			System.out.println("----- INTEGRITY (HASH):");
-			System.out.println("plainDigest: " + plainDigest.toString());
-			System.out.println("integrity_check: " + hexStringToByteArray(integrity_check).toString());
+			System.out.println("plainDigest: " + bytesToHex(plainDigest));
+			System.out.println("integrity_check: " + integrity_check);
 			System.out.println("\n\n");
 
-			return MessageDigest.isEqual(plainDigest, hexStringToByteArray(integrity_check));
+			return Arrays.equals(plainDigest, hexStringToByteArray(integrity_check));
 		}
 		catch (NoSuchAlgorithmException | IOException ex ){
 			throw new CryptoException("Error encrypting/decrypting file", ex);
