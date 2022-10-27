@@ -39,9 +39,11 @@ remote:228.10.10.10:9999    \
 - [ ] Support for unicast
 - [x] Parser config.properties
 - [x] Parser box-cryptoconfig
-- [ ] PBE for box-cryptoconfig
+- [x] PBE for box-cryptoconfig
+- [ ] PBE with other algorithms
 - [ ] Implement different streams and boxes
 - [ ] Statistics
+- [ ] Refactor in different classes
 
 ---
 
@@ -51,7 +53,8 @@ remote:228.10.10.10:9999    \
 - [x] Check integrity after decrypting
 - [ ] Statistics
 - [ ] Delete movie after decrypted
-- [ ] Can't encrypt/decrypt with RC6/CTR/NoPadding
+- [ ] Can't encrypt/decrypt with RC6/CTR/NoPadding (chekc JCE)
+- [ ] Refactor in different classes
 
 --- 
 
@@ -71,3 +74,7 @@ HMAC-SHA1(cars.dat.encrypted.dec)= 9d404a7f8a7cb2c539d23577bf3fc63282d0c5c2 \
 HMAC-SHA1(monsters.dat)= 7290bd13488321195cf729642dd60e12f94c3ca2   \
 HMAC-SHA1(README)= dc0d9943ca99b00d525c379a2e79db3ab50e49a1 \
 HMAC-SHA1(world.mp4)= 993dd7c7d0898777d27b4b3281b977002d38dc49  \
+
+path.substring(path.lastIndexOf(".enc") + 1).trim()
+PBEWithHmacSHA256AndAES_128
+PBEWithMD5AndTripleDES
