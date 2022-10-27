@@ -88,9 +88,11 @@ class StreamServer {
 
 
 		/* <Test Decryption movie> */
+		/*
 		String algorithm = ciphersuite.substring(0 , ciphersuite.indexOf("/"));
 		decryptMovie(args[0], algorithm, ciphersuite, key, iv, hcheck, integrity_check);
 		String decName = args[0] + ".dec";
+		*/
 		// System.exit(-1);
 		/* </Test Decryption movie> */
 
@@ -98,7 +100,7 @@ class StreamServer {
 
 		/* <Test integrity> */
 		// System.out.println("Check: " + hexStringToByteArray(integrity_check).toString());
-		if(verifyMovie(hcheck, integrity_check, decName, mackey)){
+		if(verifyMovie(hcheck, integrity_check, args[0], mackey)){
 			System.out.println("OK! Verified.");
 		} else {
 			System.out.println("Something went wrong with integrity check...");
@@ -107,7 +109,7 @@ class StreamServer {
 		/* </Test integrity> */
 		
 		
-		DataInputStream g = new DataInputStream( new FileInputStream(decName) );
+		DataInputStream g = new DataInputStream( new FileInputStream(args[0]) );
 		// The file with the movie-media content (encoded frames)
 		
 		byte[] buff = new byte[BUFF_SIZE];
@@ -394,19 +396,24 @@ class StreamServer {
 	public static boolean verifyMac(String hCheck, String integrity_check, String path, String macKey) throws CryptoException{
 		try
 		{
-			File plainMovie = new File(path);
-			FileInputStream inputStream = new FileInputStream(plainMovie);
-			byte[] inputBytes = new byte[(int) plainMovie.length()];
+			byte[] buffer= new byte[8192];
+			int count;
+			BufferedInputStream inputStream = new BufferedInputStream(new FileInputStream(path));
 			Mac hMac = Mac.getInstance(hCheck);
-			inputStream.close();
 			Key hMacKey = new SecretKeySpec(hexStringToByteArray(macKey), hCheck);
 			hMac.init(hMacKey);
-			byte[] plainDigest = hMac.doFinal(inputBytes);
+
+			while ((count = inputStream.read(buffer)) != -1) {
+				hMac.update(buffer, 0, count);
+			}
+
 			inputStream.close();
 
+			byte[] plainDigest = hMac.doFinal();
+
 			System.out.println("----- INTEGRITY (HMAC):");
-			System.out.println("plainDigest: " + plainDigest.toString());
-			System.out.println("integrity_check: " + hexStringToByteArray(integrity_check).toString());
+			System.out.println("plainDigest: " + bytesToHex(plainDigest));
+			System.out.println("integrity_check: " + integrity_check);
 			System.out.println("\n\n");
 
 			return Arrays.equals(plainDigest, hexStringToByteArray(integrity_check));
