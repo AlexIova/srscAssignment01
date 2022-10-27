@@ -43,14 +43,14 @@ remote:228.10.10.10:9999    \
 ### StreamServer
 - [x] Parser movies.cryptoconfig
 - [x] Decrypt movies from movies.cryptoconfing
-- [ ] Check integrity after decrypting
+- [x] Check integrity after decrypting
 - [ ] Statistics
 - [ ] Delete movie after decrypted
 - [ ] Can't encrypt/decrypt with RC6/CTR/NoPadding
 
 --- 
 
-### Info dump
+## Info dump
 `openssl dgst -sha256 *`    \
 SHA2-256(cars.dat)= 7857c02e633edd92df139699d6f2e992062654fef85f7b47d1121037d466cc1f    \
 SHA2-256(cars.dat.encrypted)= 82d5b11e1cdd26aa4d08639dc7caa27aeb5d143fd8dc4bd021881f66d16d955c  \
