@@ -38,6 +38,8 @@ remote:228.10.10.10:9999    \
 - [ ] Support for multicast
 - [ ] Support for unicast
 - [x] Parser config.properties
+- [x] Parser box-cryptoconfig
+- [ ] PBE for box-cryptoconfig
 - [ ] Implement different streams and boxes
 - [ ] Statistics
 
