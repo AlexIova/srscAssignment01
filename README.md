@@ -36,6 +36,8 @@ remote:228.10.10.10:9999    \
 - [ ] Check why can't receive anything in box if address different from localhost
 - [ ] Support for multicast
 - [ ] Support for unicast
+- [x] Parser config.properties
+- [ ] Implement different streams and boxes
 - [ ] Statistics
 
 ---
