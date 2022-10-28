@@ -78,18 +78,16 @@ class Box {
 
 
 
-		/*
-		ArrayList<Properties> listAddr = parserProperties("configs/config.properties");
+		ArrayList<Properties> listAddr = UtilsBox.parserProperties("configs/config.properties");
 		ArrayList<Properties> listConfigServer = new ArrayList<Properties>();
 		for (Properties propAddr : listAddr){
-			listConfigServer.add(parserCryptoConfig(propAddr.getProperty("remote")));
+			listConfigServer.add(UtilsBox.parserCryptoConfig(propAddr.getProperty("remote")));
 		}
 		for (Properties servSuite : listConfigServer){
 			System.out.println(servSuite.toString());
 		}
 		System.out.println(listConfigServer.get(0).getProperty("ciphersuite"));
 		System.exit(-1);
-		*/
 		
 		String remote = properties.getProperty("remote");
 		// System.out.println("REMOTE: " + remote);

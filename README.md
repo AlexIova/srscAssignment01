@@ -6,14 +6,15 @@ Just for ease of copy-pasting.
 * StreamServer  \
 `java StreamServer ./movies/monsters.dat localhost 9999`    \
 
-Per compilare il server:    \
-`javac -cp ../bcprov-jdk15on-154.jar StreamServer.java Utils.java CryptoException.java`    \
+
+To compile server:    \
+`javac -cp ../bcprov-ext-jdk18on-172.jar:../bcprov-jdk18on-172.jar  StreamServer.java UtilsServer.java CryptoException.java`    \
 
 * Box   \
 `java Box`
 
-Per compilare box:    \
-`javac -cp bcprov-ext-jdk18on-172.jar:bcprov-jdk18on-172.jar  StreamServer.java Utils.java CryptoException.java`    \
+To compile box:    \
+`javac -cp ../bcprov-ext-jdk18on-172.jar:../bcprov-jdk18on-172.jar  Box.java UtilsBox.java`    \
 
 * openssl   \
 In order to do hashes the command is:   \
@@ -51,6 +52,7 @@ remote:228.10.10.10:9999    \
 - [ ] Implement different streams and boxes
 - [ ] Statistics
 - [x] Refactor in different classes
+- [ ] Do separate config for key PBE
 
 ---
 
@@ -62,6 +64,8 @@ remote:228.10.10.10:9999    \
 - [ ] Delete movie after decrypted
 - [ ] Can't encrypt/decrypt with RC6/CTR/NoPadding (chekc JCE)
 - [x] Refactor in different classes
+- [ ] PBE on configuration
+- [ ] Separate config for key PBE
 
 --- 
 

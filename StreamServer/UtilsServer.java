@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
 
 
 
-public class Utils {
+public class UtilsServer {
 
     public static Properties parseMoviesConfig(String moviePath){
 		Properties properties = new Properties();
@@ -222,5 +222,52 @@ public class Utils {
 		}
 	}
 
+	public static Properties parserCryptoConfig(String addr){
+		Properties properties = new Properties();
+
+		int colon = addr.indexOf(":");
+
+		if(addr.substring(0 , colon).equals("localhost")){
+			addr = addr.replace("localhost", "127.0.0.1");
+		}
+
+		String start = "<" + addr + ">";
+		String finish = "</" + addr + ">";
+		try {
+			BufferedReader br = new BufferedReader(new FileReader("./configs/box-cryptoconfig"));
+			StringBuilder sb = new StringBuilder();
+			String currentLine;
+	
+			// find beginning
+			while ((currentLine = br.readLine()) != null && !(currentLine.contains(start))) {
+				System.out.println(currentLine);
+			}
+
+			// find end
+			while ((currentLine = br.readLine()) != null && !(currentLine.contains(finish))) {
+				if (currentLine.indexOf("//") != -1)	// remove comments
+					currentLine = currentLine.substring(0, currentLine.indexOf("//"));
+				sb.append(currentLine.replaceAll("\\s+",""));		// take out whitespace
+				sb.append("\n");
+			}
+
+			if(sb.length() == 0){
+				System.out.println("Can't find address in box-cryptoconfig file");
+				System.exit(-1);
+			}
+			
+			properties.load(new ByteArrayInputStream( sb.toString().getBytes() ));
+
+			System.out.println("----- PARSED (box-cryptoconfig):\n" + sb.toString() + "\n\n");
+
+			br.close();
+		} 
+		catch (Exception e) {
+			System.out.println("box-cryptoconfig file not found");
+		}
+
+		return properties;
+
+	}
 
 }

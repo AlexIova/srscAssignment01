@@ -8,7 +8,7 @@ import javax.crypto.spec.*;
 import java.security.spec.InvalidKeySpecException;
 
 
-public class Utils {
+public class UtilsBox {
     
     public static ArrayList<Properties> parserProperties(String path){
 		ArrayList<Properties> listProp = new ArrayList<Properties>();
@@ -46,7 +46,7 @@ public class Utils {
 	}
 
 
-    public static Properties parserCryptoConfig(String addr){
+	public static Properties parserCryptoConfig(String addr){
 		Properties properties = new Properties();
 
 		int colon = addr.indexOf(":");
@@ -54,9 +54,6 @@ public class Utils {
 		if(addr.substring(0 , colon).equals("localhost")){
 			addr = addr.replace("localhost", "127.0.0.1");
 		}
-			
-		System.out.println("addr: " + addr);
-		
 
 		String start = "<" + addr + ">";
 		String finish = "</" + addr + ">";
@@ -74,7 +71,7 @@ public class Utils {
 			while ((currentLine = br.readLine()) != null && !(currentLine.contains(finish))) {
 				if (currentLine.indexOf("//") != -1)	// remove comments
 					currentLine = currentLine.substring(0, currentLine.indexOf("//"));
-				sb.append(currentLine);
+				sb.append(currentLine.replaceAll("\\s+",""));		// take out whitespace
 				sb.append("\n");
 			}
 

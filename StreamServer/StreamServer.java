@@ -48,8 +48,8 @@ class StreamServer {
 
 		int BUFF_SIZE = 8192;
 		
-
-		Properties properties = Utils.parseMoviesConfig(args[0]);
+		/*
+		Properties properties = UtilsServer.parseMoviesConfig(args[0]);
 
 		String movie = "";
 		String ciphersuite= properties.getProperty("ciphersuite"); //configured ciphersuite
@@ -75,13 +75,13 @@ class StreamServer {
 		System.out.println("integrity-check: " + integrity_check);
 		System.out.println("mackey: " + mackey);
 		System.out.println("\n\n");
-
+		*/
 
 		/* <Test Encryption movie> */
-
+		/*
 		String algorithm = ciphersuite.substring(0 , ciphersuite.indexOf("/"));
-		Utils.encryptMovie(args[0], algorithm, ciphersuite, key, iv, hcheck, integrity_check);
-		
+		UtilsServer.encryptMovie(args[0], algorithm, ciphersuite, key, iv, hcheck, integrity_check);
+		*/
 		// System.exit(-1);
 		
 		/* </Test Encryption movie> */
@@ -110,6 +110,15 @@ class StreamServer {
 		System.exit(-1);
 		*/
 		/* </Test integrity> */
+
+		/* <TestBoxCryptoConfig> */
+
+		Properties BoxConfig = UtilsServer.parserCryptoConfig(args[1] + ":" + args[2]);
+		System.out.println("BoxConfig properties");
+		System.out.println(BoxConfig.toString() + "\n\n");
+		System.exit(-1);
+
+		/* </TestBoxCryptoConfig> */
 		
 		
 		DataInputStream g = new DataInputStream( new FileInputStream(args[0]) );
