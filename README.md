@@ -3,11 +3,17 @@
 ## COMMANDS
 
 Just for ease of copy-pasting.
-* StreamServer
-`java StreamServer ./movies/monsters.dat localhost 9999`
+* StreamServer  \
+`java StreamServer ./movies/monsters.dat localhost 9999`    \
+
+Per compilare il server:    \
+`javac -cp ../bcprov-jdk15on-154.jar StreamServer.java Utils.java CryptoException.java`    \
 
 * Box   \
 `java Box`
+
+Per compilare box:    \
+`javac -cp ../bcprov-jdk15on-154.jar Box.java Utils.java`    \
 
 * openssl   \
 In order to do hashes the command is:   \
