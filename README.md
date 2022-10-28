@@ -30,6 +30,7 @@ remote:228.10.10.10:9999    \
 * Can't check integrity with `SHA256` it has to be written as `SHA-256`
 * Can't check integrity with `HMAC-SHA1` it has to be written as `HmacSHA1`
 * Is the Box supposed to send every stream at the same time?
+* The range of multicast is can be found at this link http://www.tcpipguide.com/free/t_IPMulticastAddressing.htm
 
 
 ## TODO
