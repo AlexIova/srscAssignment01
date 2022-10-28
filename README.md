@@ -13,7 +13,7 @@ Per compilare il server:    \
 `java Box`
 
 Per compilare box:    \
-`javac -cp ../bcprov-jdk15on-154.jar Box.java Utils.java`    \
+`javac -cp bcprov-ext-jdk18on-172.jar:bcprov-jdk18on-172.jar  StreamServer.java Utils.java CryptoException.java`    \
 
 * openssl   \
 In order to do hashes the command is:   \

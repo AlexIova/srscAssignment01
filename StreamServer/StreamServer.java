@@ -78,11 +78,12 @@ class StreamServer {
 
 
 		/* <Test Encryption movie> */
-		/*
+
 		String algorithm = ciphersuite.substring(0 , ciphersuite.indexOf("/"));
-		encryptMovie(args[0], algorithm, ciphersuite, key, iv, hcheck, integrity_check);
+		Utils.encryptMovie(args[0], algorithm, ciphersuite, key, iv, hcheck, integrity_check);
+		
 		// System.exit(-1);
-		*/
+		
 		/* </Test Encryption movie> */
 
 
