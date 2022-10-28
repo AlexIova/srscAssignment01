@@ -60,7 +60,6 @@ class Box {
 
 		int BUFF_SIZE = 8192;
 	
-		/*
         InputStream inputStream = new FileInputStream("configs/config.properties");
         if (inputStream == null) {
             System.err.println("Configuration file not found!");
@@ -68,277 +67,114 @@ class Box {
         }
         Properties properties = new Properties();
         properties.load(inputStream);
-		*/
 
 		/* <PBE> */
+		/*
 		PBEencryption("configs/box-cryptoconfig", "password");
 		PBEdecryption("configs/box-cryptoconfig.enc", "password");
 		System.exit(-1);
+		*/
 		/* </PBE> */
 
 
 
-
+		/*
 		ArrayList<Properties> listAddr = parserProperties("configs/config.properties");
-
 		ArrayList<Properties> listConfigServer = new ArrayList<Properties>();
-		
 		for (Properties propAddr : listAddr){
 			listConfigServer.add(parserCryptoConfig(propAddr.getProperty("remote")));
 		}
-
 		for (Properties servSuite : listConfigServer){
 			System.out.println(servSuite.toString());
 		}
-
 		System.out.println(listConfigServer.get(0).getProperty("ciphersuite"));
-
 		System.exit(-1);
+		*/
 		
-		// String remote = properties.getProperty("remote");
-		// // System.out.println("REMOTE: " + remote);
+		String remote = properties.getProperty("remote");
+		// System.out.println("REMOTE: " + remote);
         
-		// String destinations = properties.getProperty("localdelivery");
-		// // System.out.println("LOCALDELIVERY: " + destinations);
+		String destinations = properties.getProperty("localdelivery");
+		// System.out.println("LOCALDELIVERY: " + destinations);
         
-		// SocketAddress inSocketAddress = parseSocketAddress(remote);		// If receiveing unicast
-		// // System.out.println("inSocketAddress: " + inSocketAddress.toString());
+		SocketAddress inSocketAddress = parseSocketAddress(remote);		// If receiveing unicast
+		// System.out.println("inSocketAddress: " + inSocketAddress.toString());
         
-		// Set<SocketAddress> outSocketAddressSet = Arrays.stream(destinations.split(",")).map(s -> parseSocketAddress(s)).collect(Collectors.toSet());
-		// System.out.println("outSocketAddressSet: " + outSocketAddressSet.toString());
+		Set<SocketAddress> outSocketAddressSet = Arrays.stream(destinations.split(",")).map(s -> parseSocketAddress(s)).collect(Collectors.toSet());
+		System.out.println("outSocketAddressSet: " + outSocketAddressSet.toString());
 
-		// DatagramSocket inSocket = new DatagramSocket(inSocketAddress); 
-    	// DatagramSocket outSocket = new DatagramSocket();
-        // byte[] buffer = new byte[BUFF_SIZE];
-		// // probably you ned to use a larger buffer for the requirements of
-		// // TP1 - remember that you will receive datagrams with encrtypted
-		// // contents, so depending on the crypti configurations, the datagrams
-		// // will be bigger than the plaintext data in the initial example.
+		DatagramSocket inSocket = new DatagramSocket(inSocketAddress); 
+    	DatagramSocket outSocket = new DatagramSocket();
+        byte[] buffer = new byte[BUFF_SIZE];
+		// probably you ned to use a larger buffer for the requirements of
+		// TP1 - remember that you will receive datagrams with encrtypted
+		// contents, so depending on the crypti configurations, the datagrams
+		// will be bigger than the plaintext data in the initial example.
 
-		// // Not that this Box is always trying to receive streams
-		// // You must modify this to contrl the end of one received
-		// // movie) to obtain the related statistics (see PrintStats)
+		// Not that this Box is always trying to receive streams
+		// You must modify this to contrl the end of one received
+		// movie) to obtain the related statistics (see PrintStats)
 
-		// /* <Derypto> */
-		// /*
-        // byte[] iv  = new byte[]
-		// {
-		// 	0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 ,
-		// 	0x0f, 0x0d, 0x0e, 0x0c, 0x0b, 0x0a, 0x09, 0x08 
-		// };
-		// IvParameterSpec dps = new IvParameterSpec(iv);
-		// String stringKey = "b356198719e456a6";
-		// Key key = new SecretKeySpec(stringKey.getBytes(), "AES");
-        // Cipher c = Cipher.getInstance("AES/OFB/NoPadding");
-		// c.init(Cipher.DECRYPT_MODE, key, dps);
-        // byte[] dBuff = new byte[BUFF_SIZE];
-		// */
-        // /* <Derypto> */
-
-
+		/* <Derypto> */
+		/*
+        byte[] iv  = new byte[]
+		{
+			0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 ,
+			0x0f, 0x0d, 0x0e, 0x0c, 0x0b, 0x0a, 0x09, 0x08 
+		};
+		IvParameterSpec dps = new IvParameterSpec(iv);
+		String stringKey = "b356198719e456a6";
+		Key key = new SecretKeySpec(stringKey.getBytes(), "AES");
+        Cipher c = Cipher.getInstance("AES/OFB/NoPadding");
+		c.init(Cipher.DECRYPT_MODE, key, dps);
+        byte[] dBuff = new byte[BUFF_SIZE];
+		*/
+        /* <Derypto> */
 
 
-        // while (buffer.length > 0 ) {
-		// 	// System.out.println("Dopo while");
-        //   	DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
-		// 	// System.out.println("Taking packet");
- 	  	// 	inSocket.receive(inPacket);  
-		// 	// System.out.println("RECEIVED");
-
-		// 	/* <RECEIVE DECRYPTION> */
-		// 	/*
-		// 	dBuff = c.doFinal(inPacket.getData());			// now should be decrypted
-		// 	*/
-		// 	/* </RECEIVE DECRYPTION> */
 
 
-        //   	System.out.print("*"); 	// Just for debug. Comment for final
-	    //                      		// observations and statistics
+        while (buffer.length > 0 ) {
+			// System.out.println("Dopo while");
+          	DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
+			// System.out.println("Taking packet");
+ 	  		inSocket.receive(inPacket);  
+			// System.out.println("RECEIVED");
+
+			/* <RECEIVE DECRYPTION> */
+			/*
+			dBuff = c.doFinal(inPacket.getData());			// now should be decrypted
+			*/
+			/* </RECEIVE DECRYPTION> */
+
+
+          	System.out.print("*"); 	// Just for debug. Comment for final
+	                         		// observations and statistics
 	  
-        //   	for (SocketAddress outSocketAddress : outSocketAddressSet) 
-        //     {
-        //       // outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
-		// 	  outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
-	    // 	}
+          	for (SocketAddress outSocketAddress : outSocketAddressSet) 
+            {
+              // outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
+			  outSocket.send(new DatagramPacket(buffer, inPacket.getLength(), outSocketAddress));
+	    	}
 
 
-		// // TODO: You must control/detect the end of a streamed movie to
-		// // call PrintStats to print the obtained statistics from
-		// // required instrumentation variables for experimental observations
+		// TODO: You must control/detect the end of a streamed movie to
+		// call PrintStats to print the obtained statistics from
+		// required instrumentation variables for experimental observations
 
-		// // PrintStats (......)
-		// }
+		// PrintStats (......)
+		}
     }
 
 
-	public static ArrayList<Properties> parserProperties(String path){
-		ArrayList<Properties> listProp = new ArrayList<Properties>();
-
-		try {
-			BufferedReader br = new BufferedReader(new FileReader("./configs/config.properties"));
-			StringBuilder sb = new StringBuilder();
-			String currentLine;
-
-			// find sections
-			while ((currentLine = br.readLine()) != null){
-				if (currentLine.contains("---")){
-					Properties prop = new Properties();
-					prop.load(new ByteArrayInputStream( sb.toString().getBytes()));
-					listProp.add(prop);
-
-					sb.setLength(0);
-					continue;
-				}		
-				sb.append(currentLine + "\n");
-			}
-			Properties prop = new Properties();
-			prop.load(new ByteArrayInputStream( sb.toString().getBytes()));
-			listProp.add(prop);
-			
-			System.out.println("----- PARSED (config.properties):\n" + listProp.toString() + "\n\n");
-
-			br.close();
-		} 
-		catch (Exception e) {
-			System.out.println("config.properties file not found");
-		}
-
-		return listProp;
-	}
 
 
-	public static Properties parserCryptoConfig(String addr){
-		Properties properties = new Properties();
-
-		int colon = addr.indexOf(":");
-
-		if(addr.substring(0 , colon).equals("localhost")){
-			addr = addr.replace("localhost", "127.0.0.1");
-		}
-			
-		System.out.println("addr: " + addr);
-		
-
-		String start = "<" + addr + ">";
-		String finish = "</" + addr + ">";
-		try {
-			BufferedReader br = new BufferedReader(new FileReader("./configs/box-cryptoconfig"));
-			StringBuilder sb = new StringBuilder();
-			String currentLine;
-	
-			// find beginning
-			while ((currentLine = br.readLine()) != null && !(currentLine.contains(start))) {
-				System.out.println(currentLine);
-			}
-
-			// find end
-			while ((currentLine = br.readLine()) != null && !(currentLine.contains(finish))) {
-				if (currentLine.indexOf("//") != -1)	// remove comments
-					currentLine = currentLine.substring(0, currentLine.indexOf("//"));
-				sb.append(currentLine);
-				sb.append("\n");
-			}
-
-			if(sb.length() == 0){
-				System.out.println("Can't find address in box-cryptoconfig file");
-				System.exit(-1);
-			}
-			
-			properties.load(new ByteArrayInputStream( sb.toString().getBytes() ));
-
-			System.out.println("----- PARSED (box-cryptoconfig):\n" + sb.toString() + "\n\n");
-
-			br.close();
-		} 
-		catch (Exception e) {
-			System.out.println("box-cryptoconfig file not found");
-		}
-
-		return properties;
-
-	}
 
 
-	public static void PBEencryption(String path, String password){
-		try
-		{
-			FileInputStream inFile = new FileInputStream(path);
-			FileOutputStream outFile = new FileOutputStream(path + ".enc");
-			PBEKeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray());
-			SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBEWithMD5AndTripleDES");
-			SecretKey secretKey = secretKeyFactory.generateSecret(pbeKeySpec);
-			byte[] salt = new byte[8];
-			Random random = new Random();
-			random.nextBytes(salt);
-			PBEParameterSpec pbeParameterSpec = new PBEParameterSpec(salt, 100);
-			Cipher cipher = Cipher.getInstance("PBEWithMD5AndTripleDES");
-			cipher.init(Cipher.ENCRYPT_MODE, secretKey, pbeParameterSpec);
-
-			outFile.write(salt);
-			
-			byte[] input = new byte[64];
-			int bytesRead;
-			while ((bytesRead = inFile.read(input)) != -1) {
-				byte[] output = cipher.update(input, 0, bytesRead);
-				if (output != null)
-					outFile.write(output);
-			}
-			byte[] output = cipher.doFinal();
-			if (output != null)
-				outFile.write(output);
-
-			inFile.close();
-			outFile.flush();
-			outFile.close();
-
-		}
-		catch (Exception e){
-			System.out.println("Errror in encryption");
-		}
-		
-	}
 
 
-	public static void PBEdecryption(String path, String password){
-		try
-		{
-			PBEKeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray());
-			SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBEWithMD5AndTripleDES");
-			SecretKey secretKey = secretKeyFactory.generateSecret(pbeKeySpec);
-			FileInputStream fis = new FileInputStream(path);
-			byte[] salt = new byte[8];
-			fis.read(salt);
-			PBEParameterSpec pbeParameterSpec = new PBEParameterSpec(salt, 100);
 
-			Cipher cipher = Cipher.getInstance("PBEWithMD5AndTripleDES");
 
-			cipher.init(Cipher.DECRYPT_MODE, secretKey, pbeParameterSpec);
 
-			FileOutputStream fos = new FileOutputStream(path + ".dec");
-			byte[] in = new byte[64];
-			int read;
-			while ((read = fis.read(in)) != -1) {
-				byte[] output = cipher.update(in, 0, read);
-				if (output != null)
-					fos.write(output);
-			}
-			byte[] output = cipher.doFinal();
-
-			if (output != null)
-				fos.write(output);
-
-			fis.close();
-			fos.flush();
-			fos.close();
-
-		}
-		catch ( NoSuchAlgorithmException | BadPaddingException 
-				| IllegalBlockSizeException | InvalidAlgorithmParameterException
-				| InvalidKeyException | NoSuchPaddingException | InvalidKeySpecException
-				| IOException e){
-			System.out.println("Errror in decryption: " + e);
-		}
-		
-	}
 
 }
