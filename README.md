@@ -43,7 +43,7 @@ remote:228.10.10.10:9999    \
 - [ ] PBE with other algorithms
 - [ ] Implement different streams and boxes
 - [ ] Statistics
-- [ ] Refactor in different classes
+- [x] Refactor in different classes
 
 ---
 
@@ -54,7 +54,7 @@ remote:228.10.10.10:9999    \
 - [ ] Statistics
 - [ ] Delete movie after decrypted
 - [ ] Can't encrypt/decrypt with RC6/CTR/NoPadding (chekc JCE)
-- [ ] Refactor in different classes
+- [x] Refactor in different classes
 
 --- 
 
