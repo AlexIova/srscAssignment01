@@ -214,9 +214,10 @@ class Box {
 					ok = true;
 				}
 			} else {
-				dBuff = c.doFinal(Arrays.copyOfRange(inPacket.getData(), 0, inPacket.getData().length - hMac.getMacLength()));
-				hBuff = digest.digest(dBuff);
-				if( Arrays.equals(hBuff, Arrays.copyOfRange(inPacket.getData(), inPacket.getData().length - hMac.getMacLength(), inPacket.getData().length))){
+				dBuff = c.doFinal(Arrays.copyOfRange(data, 0, inPacket.getLength()-hMac.getMacLength()));
+				hBuff = hMac.doFinal(dBuff);
+				ddBuff = Arrays.copyOfRange(data, inPacket.getLength()-hMac.getMacLength(), inPacket.getLength());
+				if( Arrays.equals(hBuff, ddBuff)){
 					ok = true;
 				}
 			}

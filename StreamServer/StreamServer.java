@@ -182,7 +182,7 @@ class StreamServer {
 				p.setData(wBuff, 0, wBuff.length);
 				// System.out.println("secondo");
 			} else {
-				dBuff = hMac.doFinal(buff);
+				dBuff = hMac.doFinal(Arrays.copyOfRange(buff, 0, size));
 				wBuff = UtilsServer.byteArrConcat(cBuff, dBuff);
 				p.setData(wBuff, 0, wBuff.length);
 				// System.out.println("terzo");

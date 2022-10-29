@@ -11,8 +11,8 @@ Mackey: NULL					// Don’t need in this case
 ciphersuite: AES/OFB/NoPadding  		//the ciphersuite for this box	
 key: b356198719e456a6b356198719e456a6			// AES key, in this case with 128 bits
 iv: 1076ab542789b5f61076ab542789b5f6			// iv for OFB mode
-integrity: SHA-256 				// meaning the use of SHA-1 in this case
-Mackey: NULL					// Don’t need in this case
+integrity: HmacSHA1				// meaning the use of SHA-1 in this case
+Mackey: 91342609ae5435f69a23652476e76ba					// Don’t need in this case
 </127.0.0.1:6666>
  
 <193.134.156.23:8945>
