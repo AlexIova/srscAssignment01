@@ -24,10 +24,11 @@ import java.net.*;
 import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
+import javax.lang.model.type.NullType;
+
 import java.util.Arrays;
 import java.util.Properties;
 import java.nio.charset.StandardCharsets;
-
 
 
 
@@ -48,13 +49,20 @@ class StreamServer {
 
 		int BUFF_SIZE = 8192;
 		
-		/*
-		Properties properties = UtilsServer.parseMoviesConfig(args[0]);
+		// Properties properties = UtilsServer.parseMoviesConfig(args[0]);
+
+
+		/* <TestBoxCryptoConfig> */
+		Properties BoxConfig = UtilsServer.parserCryptoConfig(args[1] + ":" + args[2]);
+		System.out.println("BoxConfig properties");
+		System.out.println(BoxConfig.toString() + "\n\n");
+		// System.exit(-1);
+		/* </TestBoxCryptoConfig> */
 
 		String movie = "";
-		String ciphersuite= properties.getProperty("ciphersuite"); //configured ciphersuite
-		String hcheck=properties.getProperty("integrity"); //config. cryptographic hash function
-		String key=properties.getProperty("key"); //configured key in hexadecimal representation
+		String ciphersuite= BoxConfig.getProperty("ciphersuite"); //configured ciphersuite
+		String hcheck=BoxConfig.getProperty("integrity"); //config. cryptographic hash function
+		String key=BoxConfig.getProperty("key"); //configured key in hexadecimal representation
 		int ksize=0; //key size used
 		int nf=0; // number of sent frames in the stream
 		int afs=0; // average size of sent frames
@@ -63,19 +71,16 @@ class StreamServer {
 		int frate=0; // achieved frame rate in #frames/sec
 		int tput=0;// achieved throughput in transmissoin in Kbytes/sec
 
-		String iv = properties.getProperty("iv");
-		String integrity_check = properties.getProperty("integrity-check");
-		String mackey = properties.getProperty("mackey");
+		String iv = BoxConfig.getProperty("iv");
+		String mackey = BoxConfig.getProperty("Mackey");
 
 		System.out.println("----- PROPERTIES:");
 		System.out.println("ciphersuite: " + ciphersuite);
 		System.out.println("key: " + key);
 		System.out.println("iv: " + iv);
 		System.out.println("hcheck: " + hcheck);
-		System.out.println("integrity-check: " + integrity_check);
-		System.out.println("mackey: " + mackey);
+		System.out.println("Mackey: " + mackey);
 		System.out.println("\n\n");
-		*/
 
 		/* <Test Encryption movie> */
 		/*
@@ -85,7 +90,6 @@ class StreamServer {
 		// System.exit(-1);
 		
 		/* </Test Encryption movie> */
-
 
 
 		/* <Test Decryption movie> */
@@ -110,21 +114,12 @@ class StreamServer {
 		System.exit(-1);
 		*/
 		/* </Test integrity> */
-
-		/* <TestBoxCryptoConfig> */
-
-		Properties BoxConfig = UtilsServer.parserCryptoConfig(args[1] + ":" + args[2]);
-		System.out.println("BoxConfig properties");
-		System.out.println(BoxConfig.toString() + "\n\n");
-		System.exit(-1);
-
-		/* </TestBoxCryptoConfig> */
 		
 		
 		DataInputStream g = new DataInputStream( new FileInputStream(args[0]) );
 		// The file with the movie-media content (encoded frames)
 		
-		byte[] buff = new byte[BUFF_SIZE];
+		byte[] buff = new byte[BUFF_SIZE * 3];
 		// Probably you must use a bigger buff size for the
 		// purpose of TP1, because in the TP1 you will use the
 		// buffer to process encrypted streams together with
@@ -137,21 +132,30 @@ class StreamServer {
 		long t0 = System.nanoTime(); //ref time for real-time stream
 		long q0 = 0;
 
-		/* <Crypto> */
-		/*
-		byte[] ivBytes  = new byte[]
-		{
-			0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00 ,
-			0x0f, 0x0d, 0x0e, 0x0c, 0x0b, 0x0a, 0x09, 0x08 
-		};
-		IvParameterSpec dps = new IvParameterSpec(ivBytes);
-		String stringKey = "b356198719e456a6";
-		Key key = new SecretKeySpec(stringKey.getBytes(), "AES");
-		Cipher c = Cipher.getInstance("AES/OFB/NoPadding");
-		c.init(Cipher.ENCRYPT_MODE, key, dps);
-		byte[] cBuff = new byte[BUFF_SIZE];
-		*/
-		/* </Crypto> */
+
+		// I'm sure this will be initialized if needed so I don't worry about it
+		MessageDigest digest = null;
+		Mac hMac = null;
+		byte[] dBuff = null;
+		byte[] wBuff = null;
+
+		Cipher c = UtilsServer.prepareCipher(ciphersuite, key, iv);
+		if (mackey.equals("NULL") && hcheck.equals("NULL") ){
+			;	// Integrity already provided
+		} else if(mackey.equals("NULL")){
+			digest = UtilsServer.prepareHashFunc(hcheck);
+			dBuff = new byte[BUFF_SIZE];
+			wBuff = new byte[BUFF_SIZE * 3];
+		} else {
+			hMac = UtilsServer.prepareMacFunc(hcheck, mackey);
+			dBuff = new byte[BUFF_SIZE];
+			wBuff = new byte[BUFF_SIZE * 3];
+		}
+		byte[] cBuff = null;
+		
+
+		p.setSocketAddress( addr ); 
+		s.send(p);
 
 		while ( g.available() > 0 ) { //while I have segments to read
 			size = g.readShort();
@@ -159,17 +163,32 @@ class StreamServer {
 			if ( count == 0 ) q0 = time; //real time stream control
 			count += 1;
 			g.readFully(buff, 0, size ); //read a segment
+							
+			// System.out.println("size: " + size);
+			// System.out.println("\n---data: " + Arrays.toString(Arrays.copyOfRange(buff, 0, size)) + "\n");
+			cBuff = c.doFinal(Arrays.copyOfRange(buff, 0, size));
+			// System.out.println("len cbuff: " + cBuff.length);
 
-			// p.setData(buff, 0, size );   Commented to make space for Crypto
+			if (mackey.equals("NULL") && hcheck.equals("NULL") ){
+				;	// Integrity already provided
+				p.setData(cBuff, 0, cBuff.length );
+				// System.out.println("primo");
+			} else if(mackey.equals("NULL")){
+				dBuff = digest.digest(Arrays.copyOfRange(buff, 0, size));
+				// System.out.println("------dbuff: \n" + Arrays.toString(dBuff) + "\n");
+				// System.out.println("------cbuff: \n" + Arrays.toString(cBuff) + "\n");
+				wBuff = UtilsServer.byteArrConcat(cBuff, dBuff);
+				// System.out.println("len wbfuff: " + wBuff.length);
+				p.setData(wBuff, 0, wBuff.length);
+				// System.out.println("secondo");
+			} else {
+				dBuff = hMac.doFinal(buff);
+				wBuff = UtilsServer.byteArrConcat(cBuff, dBuff);
+				p.setData(wBuff, 0, wBuff.length);
+				// System.out.println("terzo");
+			}
 			
-			/* <Crypto> */
-			/*
-			cBuff = c.doFinal(buff);
-			p.setData(cBuff, 0, cBuff.length );
-			*/
-			/* </Crypto> */
-
-			p.setSocketAddress( addr );  //build the dgram packet
+			p.setSocketAddress( addr ); 
 			long t = System.nanoTime(); //take current time
 			// and sync. the wait tome to dispatch the segment
 			// correctly with the required real-time control
@@ -179,10 +198,12 @@ class StreamServer {
 			
 
 			s.send( p );
+			// System.out.println("len after sent: " + p.getLength());
 			
 			System.out.print( "." ); // just for debug
 			// take this last line off or any I/O or debug for
 			// final observations in TP1
+
 		}
 			System.out.println("DONE! all frames sent: "+count);
 

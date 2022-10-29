@@ -219,7 +219,7 @@ public class UtilsBox {
 		}
 		catch (NoSuchPaddingException | NoSuchAlgorithmException 
 				| InvalidKeyException| InvalidAlgorithmParameterException ex) {
-			throw new CryptoException("Error decrypting", ex);
+			throw new CryptoException("Error encrypting/decrypting file", ex);
 		}
 
 	}

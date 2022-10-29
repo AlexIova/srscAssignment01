@@ -14,7 +14,7 @@ To compile server:    \
 `java Box`
 
 To compile box:    \
-`javac -cp ../bcprov-ext-jdk18on-172.jar:../bcprov-jdk18on-172.jar  Box.java UtilsBox.java`    \
+`javac -cp ../bcprov-ext-jdk18on-172.jar:../bcprov-jdk18on-172.jar  Box.java UtilsBox.java CryptoException.java`    \
 
 * openssl   \
 In order to do hashes the command is:   \
@@ -53,6 +53,7 @@ remote:228.10.10.10:9999    \
 - [ ] Statistics
 - [x] Refactor in different classes
 - [ ] Do separate config for key PBE
+- [ ] If integrity = NULL return
 
 ---
 
@@ -66,6 +67,7 @@ remote:228.10.10.10:9999    \
 - [x] Refactor in different classes
 - [ ] PBE on configuration
 - [ ] Separate config for key PBE
+- [ ] If integrity = NULL return
 
 --- 
 
@@ -89,3 +91,17 @@ HMAC-SHA1(world.mp4)= 993dd7c7d0898777d27b4b3281b977002d38dc49  \
 path.substring(path.lastIndexOf(".enc") + 1).trim()
 PBEWithHmacSHA256AndAES_128
 PBEWithMD5AndTripleDES
+
+
+box-cryptoconfig (BOX)
+<127.0.0.1:6666>
+ciphersuite: AES/OFB/NoPadding  //the ciphersuite for this box	
+key: b356198719e456a6			// AES key, in this case with 128 bits
+iv: 1076ab542789b5f6			// iv for OFB mode
+integrity: SHA1 				// meaning the use of SHA-1 in this case
+Mackey: NULL					// Don’t need in this case
+</127.0.0.1:6666>
+
+config.properties (BOX)
+localdelivery: localhost:8888
+remote: localhost:6666

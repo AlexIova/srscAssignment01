@@ -177,7 +177,7 @@ public class UtilsServer {
 			return Arrays.equals(plainDigest, hexStringToByteArray(integrity_check));
 		}
 		catch (NoSuchAlgorithmException | IOException ex ){
-			throw new CryptoException("Error encrypting/decrypting file", ex);
+			throw new CryptoException("Error verifying hash", ex);
 		}
 
 	}
@@ -209,7 +209,7 @@ public class UtilsServer {
 			return Arrays.equals(plainDigest, hexStringToByteArray(integrity_check));
 		} 
 		catch (NoSuchAlgorithmException | InvalidKeyException | IOException ex){
-			throw new CryptoException("Error encrypting/decrypting file", ex);
+			throw new CryptoException("Error verifying mac", ex);
 		}
 	}
 
@@ -221,6 +221,7 @@ public class UtilsServer {
 			return verifyMac(hCheck, integrity_check, path, macKey);
 		}
 	}
+
 
 	public static Properties parserCryptoConfig(String addr){
 		Properties properties = new Properties();
@@ -240,7 +241,7 @@ public class UtilsServer {
 	
 			// find beginning
 			while ((currentLine = br.readLine()) != null && !(currentLine.contains(start))) {
-				System.out.println(currentLine);
+				;
 			}
 
 			// find end
@@ -269,5 +270,67 @@ public class UtilsServer {
 		return properties;
 
 	}
+
+
+	public static Cipher prepareCipher(String ciphersuite, String key, String iv) throws CryptoException{
+		String algorithm = ciphersuite.substring(0 , ciphersuite.indexOf("/"));
+
+		try
+		{
+			IvParameterSpec ivSpec = new IvParameterSpec(hexStringToByteArray(iv));
+			Key secretKey = new SecretKeySpec(hexStringToByteArray(key), algorithm);
+			Cipher cipher = Cipher.getInstance(ciphersuite);
+			cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
+			return cipher;
+		}
+		catch (NoSuchPaddingException | NoSuchAlgorithmException 
+				| InvalidKeyException| InvalidAlgorithmParameterException ex) {
+			throw new CryptoException("Error encrypting/decrypting file", ex);
+		}
+
+	}
+
+
+	public static MessageDigest prepareHashFunc(String hCheck) throws CryptoException{
+		try
+		{
+			return MessageDigest.getInstance(hCheck);
+		}
+		catch(NoSuchAlgorithmException ex){
+			throw new CryptoException("Error verifying hash", ex);
+		}
+	}
+
+	
+	public static Mac prepareMacFunc(String hCheck, String macKey) throws CryptoException{
+		try{
+			Mac hMac = Mac.getInstance(hCheck);
+			Key hMacKey = new SecretKeySpec(hexStringToByteArray(macKey), hCheck);
+			hMac.init(hMacKey);
+			return hMac;
+		}
+		catch(NoSuchAlgorithmException | InvalidKeyException ex){
+			throw new CryptoException("Error verifying mac", ex);
+		}
+	}
+
+
+	public static byte[] byteArrConcat(byte[] a, byte[] b){
+		if (a == null || a.length == 0) return b;
+
+		if (b == null || b.length == 0) return a;
+
+		byte[] c = new byte[a.length + b.length];
+		int ctr = 0;
+
+		for (int i = 0; i < a.length; i++) 
+			c[ctr++] = a[i];
+
+		for (int i = 0; i < b.length; i++)
+			c[ctr++] = b[i];
+
+		return c;
+	}
+
 
 }
