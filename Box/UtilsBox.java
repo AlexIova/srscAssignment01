@@ -1,20 +1,25 @@
 import java.io.*;
+import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Random;
+import java.util.Arrays;
 import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import java.security.spec.InvalidKeySpecException;
 import java.nio.charset.StandardCharsets;
+import java.net.SocketAddress;
+import java.net.InetSocketAddress;
+import java.net.DatagramSocket;
 
 
 public class UtilsBox {
     
-		// Found on stackOverflow
-		private static byte[] hexStringToByteArray(String s) {
+	// Found on stackOverflow
+	private static byte[] hexStringToByteArray(String s) {
 			byte[] b = new byte[s.length() / 2];
 			for (int i = 0; i < b.length; i++) {
 			  int index = i * 2;
@@ -25,8 +30,8 @@ public class UtilsBox {
 		}
 		
 	
-		// Found on stackOverflow
-		private static String bytesToHex(byte[] bytes) {
+	// Found on stackOverflow
+	private static String bytesToHex(byte[] bytes) {
 			byte[] HEX_ARRAY = "0123456789abcdef".getBytes(StandardCharsets.US_ASCII);
 			byte[] hexChars = new byte[bytes.length * 2];
 			for (int j = 0; j < bytes.length; j++) {
@@ -280,4 +285,78 @@ public class UtilsBox {
 	}
 
 
+	public static Boolean isFinished(DatagramPacket p){
+
+		byte[]  nullByte = new byte[] { 
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+			};
+
+		byte[] data = Arrays.copyOfRange(p.getData(), 0, p.getLength());
+
+		return Arrays.equals(data, nullByte);
+	}
+
+
+	public static void getSetup(ArrayList<Properties> listAddr, 
+								ArrayList<Properties> listConfigServer,
+								ArrayList<DatagramSocket> inSocketSet, 
+								ArrayList<DatagramSocket> outSocketSet){
+
+		ArrayList<SocketAddress> inSocketAdressSet = new ArrayList<SocketAddress>();
+		ArrayList<SocketAddress> outSocketAddressSet = new ArrayList<SocketAddress>();
+
+		for (Properties propAddr : listAddr){
+			listConfigServer.add(UtilsBox.parserCryptoConfig(propAddr.getProperty("remote")));		// get cryptoconfigs
+			inSocketAdressSet.add(parseSocketAddress(propAddr.getProperty("remote")));				// get addr remote
+			outSocketAddressSet.add(parseSocketAddress(propAddr.getProperty("localdelivery")));		// get addr local
+		}	
+
+		for (SocketAddress inAddr: inSocketAdressSet){
+			try {
+				inSocketSet.add(new DatagramSocket(inAddr));
+			} catch (SocketException e) {
+				System.out.println("Error insockets with" + inAddr.toString());
+			}
+		}
+
+		for (SocketAddress outAddr: outSocketAddressSet){
+			try {
+				outSocketSet.add(new DatagramSocket(outAddr));
+			} catch (SocketException e) {
+				System.out.println("Error insockets with" + outAddr.toString());
+			}
+		}
+
+		return;
+	}
+
+
+	private static InetSocketAddress parseSocketAddress(String socketAddress) 
+    {
+        String[] split = socketAddress.split(":");
+        String host = split[0];
+        int port = Integer.parseInt(split[1]);
+        return new InetSocketAddress(host, port);
+    }
+
+	public static void timeoutSock(ArrayList<DatagramSocket> inSocketSet, int time){
+		for(DatagramSocket inSock : inSocketSet){
+			try {
+				inSock.setSoTimeout(time);
+			} catch (SocketException e) {
+				System.out.println("Error setting timer with" + inSock.toString());
+			}
+		}
+	}
 }

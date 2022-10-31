@@ -14,11 +14,11 @@ iv: 1076ab542789b5f61076ab542789b5f6			// iv for OFB mode
 integrity: HmacSHA1				// meaning the use of SHA-1 in this case
 Mackey: 91342609ae5435f69a23652476e76ba					// Don’t need in this case
 </127.0.0.1:6666>
- 
-<193.134.156.23:8945>
-ciphersuite: RC6/GCM/NoPadding  		//the ciphersuite for encrypted movie “cars”
-key: 476e67a34e557189			// RC6 key, in this case with 128 bits
-iv: 8a451982e562c487 			// IV for GCM mode
-Integrity: NULL				//Don’t need in this case
-mackey: NULL					// Don’t need in this case
-</193.134.156.23:8945>
+
+<127.0.0.1:7777>
+ciphersuite: Blowfish/CBC/PKCS5Padding 		//the ciphersuite for this box	
+key: b356198719e456cc			// AES key, in this case with 128 bits
+iv: 1076ab542789bccc			// iv for OFB mode
+integrity: HmacSHA1				// meaning the use of SHA-1 in this case
+Mackey: 91342609ae5435f69a23652476e76ba					// Don’t need in this case
+</127.0.0.1:7777>

@@ -25,7 +25,7 @@ import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import javax.lang.model.type.NullType;
-
+import java.security.Security;
 import java.util.Arrays;
 import java.util.Properties;
 import java.nio.charset.StandardCharsets;
@@ -42,6 +42,7 @@ class StreamServer {
 			System.out.println("  or: hjStreamServer <movie> <ip-unicast-address> <port>");
 			System.exit(-1);
 		}
+		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
       
 		int size=0;
 		int count=0;
@@ -59,11 +60,10 @@ class StreamServer {
 		// System.exit(-1);
 		/* </TestBoxCryptoConfig> */
 
-		String movie = "";
+		String movie = args[1];
 		String ciphersuite= BoxConfig.getProperty("ciphersuite"); //configured ciphersuite
 		String hcheck=BoxConfig.getProperty("integrity"); //config. cryptographic hash function
 		String key=BoxConfig.getProperty("key"); //configured key in hexadecimal representation
-		int ksize=0; //key size used
 		int nf=0; // number of sent frames in the stream
 		int afs=0; // average size of sent frames
 		int ms=0; // total size of the stremed movie
@@ -131,6 +131,7 @@ class StreamServer {
 		DatagramPacket p = new DatagramPacket(buff, buff.length, addr );
 		long t0 = System.nanoTime(); //ref time for real-time stream
 		long q0 = 0;
+		long sizeSent = 0;
 
 
 		// I'm sure this will be initialized if needed so I don't worry about it
@@ -157,13 +158,18 @@ class StreamServer {
 		p.setSocketAddress( addr ); 
 		s.send(p);
 
+		long tBeginning = System.currentTimeMillis();
+
 		while ( g.available() > 0 ) { //while I have segments to read
 			size = g.readShort();
 			time = g.readLong();
 			if ( count == 0 ) q0 = time; //real time stream control
 			count += 1;
 			g.readFully(buff, 0, size ); //read a segment
+
+			ms += size;
 							
+
 			// System.out.println("size: " + size);
 			// System.out.println("\n---data: " + Arrays.toString(Arrays.copyOfRange(buff, 0, size)) + "\n");
 			cBuff = c.doFinal(Arrays.copyOfRange(buff, 0, size));
@@ -198,6 +204,9 @@ class StreamServer {
 			
 
 			s.send( p );
+			nf += 1;	// counter sent frames
+			sizeSent += p.getLength();
+
 			// System.out.println("len after sent: " + p.getLength());
 			
 			System.out.print( "." ); // just for debug
@@ -205,7 +214,31 @@ class StreamServer {
 			// final observations in TP1
 
 		}
-			System.out.println("DONE! all frames sent: "+count);
+			long tFinish = System.currentTimeMillis();
+			etm = (int) (tFinish-tBeginning)/1000;
+
+
+			byte[]  nullByte = new byte[] { 
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+				};
+
+			System.out.println("sent null");
+			p.setData(nullByte, 0, nullByte.length);
+			s.send(p);
+
+			p.setData(args[0].getBytes(), 0, args[0].getBytes().length);
+			s.send(p);
 
 			// Note:
 			// For TP1
@@ -223,39 +256,12 @@ class StreamServer {
 			// obtained instrumentation variabes during the
 			// stream
 			
+			PrintStatsServer.Print(args[0], BoxConfig.getProperty("ciphersuite"), 
+								BoxConfig.getProperty("integrity"), 
+								BoxConfig.getProperty("key"),
+								nf, ms, count, etm);
+			
 	}
-
-    // Print statistics and metrics as required
-    
-    public void PrintStats(String m, String csuite, String k, int ks,
-			   String ihcheck,
-			   int nf, int afs, int ms, int etm, int frate,
-			   int tput)
-    {
-    	System.out.println("---------------------------------------------");
-		System.out.println("Sreaming Server");
-        System.out.println("Statistics / Metrics");
-        System.out.println("---------------------------------------------");
-		System.out.println();
-		System.out.println("---------------------------------------------");
-		System.out.println("Streamed media-movie and security configs");
-		System.out.println("---------------------------------------------");
-		System.out.println("Received/Streamed Movie:" + m);
-		System.out.println("Used Ciphersuite /ALG/MODE/PADDING:" + csuite);
-		System.out.println("Used key (hexadecimal rep):" + k);
-        System.out.println("Key size used:" + ks);	
-		System.out.println("Used secure Hash for integrity check:" + ihcheck);
-        System.out.println("---------------------------------------------");
-        System.out.println("Performance indicators of processed stream");
-        System.out.println("---------------------------------------------");
-        System.out.println("Nr of sent frames:" + nf );
-        System.out.println("Average frame size:" +  afs);
-        System.out.println("Movie size (all streamed frames):" + ms );  
-        System.out.println("Total elapsed time of movie:" + etm);
-        System.out.println("Observed average frame rate (frames/sec)" + frate);
-        System.out.println("Observed troughput (KBytes/sec)" + tput);
-        System.out.println("---------------------------------------------");
-    }
 
 }
 

@@ -26,23 +26,17 @@ import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import java.security.spec.InvalidKeySpecException;
+import java.security.Security;
 
-class Box {
-    
-    private static InetSocketAddress parseSocketAddress(String socketAddress) 
-    {
-        String[] split = socketAddress.split(":");
-        String host = split[0];
-        int port = Integer.parseInt(split[1]);
-        return new InetSocketAddress(host, port);
-    }    
+class Box {    
     
     public static void main(String[] args) throws Exception {
+
+		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());  // This is to make BC work
 
 		// Need these variables for instrumentation metrics on
 		// received and processed streams delivered to the
 		// media player
-		String movie; // name of received movie
 		String csuite; // used cyphersuite to process the received stream
 		String k;   // The key used, in Hexadecimal representation
         int ksize;  // The key size
@@ -56,6 +50,9 @@ class Box {
 		int frate;  // observed frame rate in segments/sec)
         int tput;   // observed throughput in the channel (in Kbytes/sec)
         int corruptedframes;   // Nr of corrupted frames discarded (not sent to the media player
+		String mackey;
+		String iv;
+		
 		// can add more instrumentation variables considered as interesting
 
 		int BUFF_SIZE = 8192;
@@ -79,50 +76,11 @@ class Box {
 
 
 		ArrayList<Properties> listAddr = UtilsBox.parserProperties("configs/config.properties");
-
 		ArrayList<Properties> listConfigServer = new ArrayList<Properties>();
-		ArrayList<SocketAddress> inSocketAdressSet = new ArrayList<SocketAddress>();
-		ArrayList<SocketAddress> outSocketAddressSet = new ArrayList<SocketAddress>();
-		
-		System.out.println("\n\n---listAddr");
-		System.out.println(listAddr);
-
-		for (Properties propAddr : listAddr){
-			listConfigServer.add(UtilsBox.parserCryptoConfig(propAddr.getProperty("remote")));		// get cryptoconfigs
-			inSocketAdressSet.add(parseSocketAddress(propAddr.getProperty("remote")));				// get addr remote
-			outSocketAddressSet.add(parseSocketAddress(propAddr.getProperty("localdelivery")));		// get addr local
-		}		
-        
 		ArrayList<DatagramSocket> inSocketSet = new ArrayList<DatagramSocket>();
-		for (SocketAddress inAddr: inSocketAdressSet){
-			inSocketSet.add(new DatagramSocket(inAddr));
-		}
-
 		ArrayList<DatagramSocket> outSocketSet = new ArrayList<DatagramSocket>();	
-		for (SocketAddress outAddr: outSocketAddressSet){
-			outSocketSet.add(new DatagramSocket(outAddr));
-		}	
 
-		System.out.println("\n\n---listConfigServer");
-		System.out.println(listConfigServer);
-
-		// probably you ned to use a larger buffer for the requirements of
-		// TP1 - remember that you will receive datagrams with encrtypted
-		// contents, so depending on the crypti configurations, the datagrams
-		// will be bigger than the plaintext data in the initial example.
-
-		// Not that this Box is always trying to receive streams
-		// You must modify this to contrl the end of one received
-		// movie) to obtain the related statistics (see PrintStats)
-
-
-
-		for(DatagramSocket inSock : inSocketSet){
-			inSock.setSoTimeout(100);
-		}
-		
-		// System.out.println(inSocketSet);
-		// System.out.println(outSocketSet);
+		UtilsBox.getSetup(listAddr, listConfigServer, inSocketSet, outSocketSet);
 
 		byte[] buffer = new byte[BUFF_SIZE * 3];
 
@@ -133,41 +91,6 @@ class Box {
 
 		DatagramPacket inPacket = new DatagramPacket(buffer, buffer.length);
 
-		Boolean start = false;
-		while (!start){
-			for(DatagramSocket inSock : inSocketSet){
-				try{
-					inSock.receive(inPacket);
-					if(inPacket.getData().equals(buffer)){
-						inConn = inSock;
-						start = true;
-						System.out.println("TROVATO");
-					}
-				} catch (Exception e){
-					;
-				}
-			}
-		}
-
-		outConnData = UtilsBox.findOutSocket(inConn, inSocketSet, outSocketSet);
-		outAddress = new InetSocketAddress(outConnData.getLocalAddress(), outConnData.getLocalPort());
-		outConn =  new DatagramSocket();
-		outConnData.close();
-		inConn.setSoTimeout(0);		// Don't care about timeout now
-
-		System.out.println(inConn.getLocalAddress() + ":" + String.valueOf(inConn.getLocalPort()));
-		Properties propStream = UtilsBox.parserCryptoConfig(inConn.getLocalAddress().toString().substring(1) + ":" + String.valueOf(inConn.getLocalPort()));
-
-
-		csuite = propStream.getProperty("ciphersuite");
-		k = propStream.getProperty("key");
-		ksize = 4 * k.length();
-		hic = propStream.getProperty("integrity");
-		String mackey = propStream.getProperty("Mackey");
-		String iv = propStream.getProperty("iv");
-		
-		System.out.println(csuite + "\t" + k + "\t" + hic + "\t" + mackey + "\t" + iv+ "\t" );		
-
 
 		MessageDigest digest = null;
 		Mac hMac = null;
@@ -175,80 +98,140 @@ class Box {
 		byte[] hBuff = null;
 		byte[] data = null;
 		byte[] ddBuff = null;
-
-		Cipher c = UtilsBox.prepareCipher(csuite, k, iv);
-		if (mackey.equals("NULL") && hic.equals("NULL") ){
-			;	// Integrity already provided
-		} else if(mackey.equals("NULL")){
-			digest = UtilsBox.prepareHashFunc(hic);
-		} else {
-			hMac = UtilsBox.prepareMacFunc(hic, mackey);
-		}
+		String movie = null;
 
 
-        while (buffer.length > 0 ) {
+		while (true){
+			System.out.println("08");
 
-			inConn.receive(inPacket);
+			UtilsBox.timeoutSock(inSocketSet, 100);
 
-			// System.out.println("len data 1: " + inPacket.getLength());
+			Boolean start = false;
+			while (!start){
+				for(DatagramSocket inSock : inSocketSet){
+					try{
+						System.out.println("01");
+						inSock.receive(inPacket);
+						//if(inPacket.getData().equals(buffer)){
+						inConn = inSock;
+						start = true;
+						System.out.println("TROVATO");
+						// }
+					} catch (Exception e){
+						continue;
+					}
+				}
+			}
 
-			data = Arrays.copyOfRange(inPacket.getData(), 0, inPacket.getLength());
+			start = true;
 
-			boolean ok = false;
+			System.out.println("02");
+			outConnData = UtilsBox.findOutSocket(inConn, inSocketSet, outSocketSet);
+			System.out.println("03");
+			System.out.println("Local address: " + outConnData.getLocalAddress() + "\n Local port: " + outConnData.getLocalPort());
+			outAddress = new InetSocketAddress(outConnData.getLocalAddress(), outConnData.getLocalPort());
+			outConn =  new DatagramSocket();
+			outConnData.close();
+			inConn.setSoTimeout(0);		// Don't care about timeout now
 
+			System.out.println("04");
+			Properties propStream = UtilsBox.parserCryptoConfig(inConn.getLocalAddress().toString().substring(1) + ":" + String.valueOf(inConn.getLocalPort()));
+
+			csuite = propStream.getProperty("ciphersuite");
+			k = propStream.getProperty("key");
+			hic = propStream.getProperty("integrity");
+			mackey = propStream.getProperty("Mackey");
+			iv = propStream.getProperty("iv");
+
+			System.out.println("05");
+			Cipher c = UtilsBox.prepareCipher(csuite, k, iv);
 			if (mackey.equals("NULL") && hic.equals("NULL") ){
 				;	// Integrity already provided
-				dBuff = c.doFinal(data);
-				ok = true;
 			} else if(mackey.equals("NULL")){
-				dBuff = c.doFinal(Arrays.copyOfRange(data, 0, inPacket.getLength()-digest.getDigestLength()));
-				// System.out.println("dbuff len: " + dBuff.length);
-				hBuff = digest.digest(dBuff);
-				// System.out.println("\n---hbuff: " + Arrays.toString(hBuff) + "\n");
-				// System.out.println("\n---data: " + Arrays.toString(data) + "\n");
-				// System.out.println("\n---data: " + Arrays.toString(dBuff) + "\n");
-				// System.out.println("hash?: " + (inPacket.getLength()-(inPacket.getLength()-digest.getDigestLength())) + "\t arr: " + Arrays.copyOfRange(data, inPacket.getLength()-digest.getDigestLength(), inPacket.getLength()));
-				ddBuff = Arrays.copyOfRange(data, inPacket.getLength()-digest.getDigestLength(), inPacket.getLength());
-				// System.out.println("ddBuff len: " + ddBuff.length + "\t arr: \n" + Arrays.toString(ddBuff));
-				if( MessageDigest.isEqual(hBuff, ddBuff)){
-					ok = true;
-				}
+				digest = UtilsBox.prepareHashFunc(hic);
 			} else {
-				dBuff = c.doFinal(Arrays.copyOfRange(data, 0, inPacket.getLength()-hMac.getMacLength()));
-				hBuff = hMac.doFinal(dBuff);
-				ddBuff = Arrays.copyOfRange(data, inPacket.getLength()-hMac.getMacLength(), inPacket.getLength());
-				if( Arrays.equals(hBuff, ddBuff)){
-					ok = true;
-				}
+				hMac = UtilsBox.prepareMacFunc(hic, mackey);
 			}
 
-			if (ok){
-				outConn.send(new DatagramPacket(dBuff, dBuff.length, outAddress));
-				// System.out.println("BRAVO");
-			} else {
-				System.out.println("ERRORE");
+
+			long tStart = System.currentTimeMillis();
+			int totCount = 0;
+			int discarded = 0;
+			int sizeC = 0;
+			int sizeD = 0;
+			int sizeTot = 0;
+
+			while (true) {
+
+				boolean ok = false;
+
+				System.out.print("06");
+				inConn.receive(inPacket);
+
+				if (UtilsBox.isFinished(inPacket)){
+					System.out.println("FINITO");
+					break;
+				}
+
+				totCount++;
+
+				data = Arrays.copyOfRange(inPacket.getData(), 0, inPacket.getLength());
+				sizeTot += inPacket.getLength();
+
+				if (mackey.equals("NULL") && hic.equals("NULL") ){
+					sizeC += inPacket.getLength();
+					dBuff = c.doFinal(data);
+					ok = true;
+				} else if(mackey.equals("NULL")){
+					sizeC += inPacket.getLength()-digest.getDigestLength();
+					dBuff = c.doFinal(Arrays.copyOfRange(data, 0, inPacket.getLength()-digest.getDigestLength()));
+					hBuff = digest.digest(dBuff);
+					ddBuff = Arrays.copyOfRange(data, inPacket.getLength()-digest.getDigestLength(), inPacket.getLength());
+					if( MessageDigest.isEqual(hBuff, ddBuff)){
+						ok = true;
+					}
+				} else {
+					sizeC += inPacket.getLength()-hMac.getMacLength();
+					dBuff = c.doFinal(Arrays.copyOfRange(data, 0, inPacket.getLength()-hMac.getMacLength()));
+					hBuff = hMac.doFinal(dBuff);
+					ddBuff = Arrays.copyOfRange(data, inPacket.getLength()-hMac.getMacLength(), inPacket.getLength());
+					if( Arrays.equals(hBuff, ddBuff)){
+						ok = true;
+					}
+				}
+
+				if (ok){
+					sizeD += dBuff.length;
+					outConn.send(new DatagramPacket(dBuff, dBuff.length, outAddress));
+				} else {
+					discarded++;
+				}
+
+
+				System.out.print("*"); 	// Just for debug. Comment for final
+										// observations and statistics
+		
+
 			}
 
-			/*
-			System.out.println(dBuff.length);
-			System.out.println(inPacket.getLength());
-			*/
+			System.out.println("07");
+			inConn.receive(inPacket);
 
+			byte[] movieB = Arrays.copyOfRange(inPacket.getData(), 0, inPacket.getLength());
 
+			movie = new String(movieB);
 
-          	System.out.print("*"); 	// Just for debug. Comment for final
-	                         		// observations and statistics
-	  
+			outConn.close();
 
-		// TODO: You must control/detect the end of a streamed movie to
-		// call PrintStats to print the obtained statistics from
-		// required instrumentation variables for experimental observations
+			long tEnd = System.currentTimeMillis();
 
-		// PrintStats (......)
+			int time = (int) (tEnd - tStart)/1000;
+		
+			PrinStatsBox.print(movie, csuite, hic, k, totCount, sizeTot, sizeC, sizeD, time, discarded);
 		}
 
-
 	}
+	
 }
 
 	

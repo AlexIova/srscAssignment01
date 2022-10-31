@@ -8,13 +8,13 @@ Just for ease of copy-pasting.
 
 
 To compile server:    \
-`javac -cp ../bcprov-ext-jdk18on-172.jar:../bcprov-jdk18on-172.jar  StreamServer.java UtilsServer.java CryptoException.java`    \
+`javac  StreamServer.java UtilsServer.java CryptoException.java PrintStatsServer.java`    \
 
 * Box   \
-`java Box`
+`java Box`  \
 
 To compile box:    \
-`javac -cp ../bcprov-ext-jdk18on-172.jar:../bcprov-jdk18on-172.jar  Box.java UtilsBox.java CryptoException.java`    \
+`javac Box.java UtilsBox.java CryptoException.java PrinStatsBox.java`    \
 
 * openssl   \
 In order to do hashes the command is:   \
@@ -49,11 +49,11 @@ remote:228.10.10.10:9999    \
 - [x] Parser box-cryptoconfig
 - [x] PBE for box-cryptoconfig
 - [ ] PBE with other algorithms
-- [ ] Implement different streams and boxes
-- [ ] Statistics
+- [x] Implement different streams and boxes
+- [x] Statistics
 - [x] Refactor in different classes
 - [ ] Do separate config for key PBE
-- [ ] If integrity = NULL return
+- [x] If integrity = NULL return
 
 ---
 
@@ -61,13 +61,13 @@ remote:228.10.10.10:9999    \
 - [x] Parser movies.cryptoconfig
 - [x] Decrypt movies from movies.cryptoconfing
 - [x] Check integrity after decrypting
-- [ ] Statistics
+- [x] Statistics
 - [ ] Delete movie after decrypted
 - [ ] Can't encrypt/decrypt with RC6/CTR/NoPadding (chekc JCE)
 - [x] Refactor in different classes
 - [ ] PBE on configuration
 - [ ] Separate config for key PBE
-- [ ] If integrity = NULL return
+- [x] If integrity = NULL return
 
 --- 
 
