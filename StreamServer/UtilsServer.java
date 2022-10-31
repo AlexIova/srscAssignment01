@@ -1,10 +1,14 @@
 import java.io.*;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import java.util.Arrays;
 import java.util.Properties;
-import java.nio.charset.StandardCharsets;
+import java.util.Random;
+import java.security.spec.InvalidKeySpecException;
+
 
 
 
@@ -41,8 +45,6 @@ public class UtilsServer {
 			
 			properties.load(new ByteArrayInputStream( sb.toString().getBytes() ));
 
-			System.out.println("----- PARSED:\n" + sb.toString() + "\n\n");
-
 			br.close();
 		} 
 		catch (Exception e) {
@@ -53,10 +55,10 @@ public class UtilsServer {
 	}
 
 
-	public static void decryptMovie(String path, String algorithm , 
+	public static void decryptMovieAndVerify(String path, String algorithm , 
 									String ciphersuite, String key, 
 									String iv, String fIntegrity, 
-									String integrity_check) throws CryptoException{
+									String integrity_check, String mackey) throws CryptoException{
 		try
 		{
 			String decMovie = path + ".dec";
@@ -79,6 +81,15 @@ public class UtilsServer {
 			outputStream.write(outputBytes);
 			outputStream.close();
 
+			if (verifyMovie(fIntegrity, integrity_check, path + ".dec", mackey)){
+				System.out.println("Correctly verified");
+				return;
+			} 
+			else {
+				System.out.println("ERROR in verification movie");
+				return;
+			}
+
 		}
 		catch (NoSuchPaddingException | NoSuchAlgorithmException 
 				| InvalidKeyException | BadPaddingException
@@ -96,7 +107,7 @@ public class UtilsServer {
 									String integrity_check) throws CryptoException{
 		try
 		{
-			String encMovie = path + ".encrypted";
+			String encMovie = path + ".enc";
 			File plainMovie = new File(path);
 			IvParameterSpec ivSpec = new IvParameterSpec(hexStringToByteArray(iv));
 			Key secretKey = new SecretKeySpec(hexStringToByteArray(key), algorithm);
@@ -139,19 +150,6 @@ public class UtilsServer {
 	}
     
 
-	// Found on stackOverflow
-	private static String bytesToHex(byte[] bytes) {
-		byte[] HEX_ARRAY = "0123456789abcdef".getBytes(StandardCharsets.US_ASCII);
-		byte[] hexChars = new byte[bytes.length * 2];
-		for (int j = 0; j < bytes.length; j++) {
-			int v = bytes[j] & 0xFF;
-			hexChars[j * 2] = HEX_ARRAY[v >>> 4];
-			hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
-		}
-		return new String(hexChars, StandardCharsets.UTF_8);
-	}
-
-
 	private static boolean verifyHash(String hCheck, String integrity_check, String path) throws CryptoException{
 		try
 		{
@@ -168,11 +166,6 @@ public class UtilsServer {
 			inputStream.close();
 		
 			byte[] plainDigest = digest.digest();
-
-			System.out.println("----- INTEGRITY (HASH):");
-			System.out.println("plainDigest: " + bytesToHex(plainDigest));
-			System.out.println("integrity_check: " + integrity_check);
-			System.out.println("\n\n");
 
 			return Arrays.equals(plainDigest, hexStringToByteArray(integrity_check));
 		}
@@ -200,11 +193,6 @@ public class UtilsServer {
 			inputStream.close();
 
 			byte[] plainDigest = hMac.doFinal();
-
-			System.out.println("----- INTEGRITY (HMAC):");
-			System.out.println("plainDigest: " + bytesToHex(plainDigest));
-			System.out.println("integrity_check: " + integrity_check);
-			System.out.println("\n\n");
 
 			return Arrays.equals(plainDigest, hexStringToByteArray(integrity_check));
 		} 
@@ -235,7 +223,7 @@ public class UtilsServer {
 		String start = "<" + addr + ">";
 		String finish = "</" + addr + ">";
 		try {
-			BufferedReader br = new BufferedReader(new FileReader("./configs/box-cryptoconfig"));
+			BufferedReader br = new BufferedReader(new FileReader("./configs/box-cryptoconfig.enc.dec"));
 			StringBuilder sb = new StringBuilder();
 			String currentLine;
 	
@@ -258,9 +246,6 @@ public class UtilsServer {
 			}
 			
 			properties.load(new ByteArrayInputStream( sb.toString().getBytes() ));
-
-			System.out.println("----- PARSED (box-cryptoconfig):\n" + sb.toString() + "\n\n");
-
 			br.close();
 		} 
 		catch (Exception e) {
@@ -332,5 +317,153 @@ public class UtilsServer {
 		return c;
 	}
 
+
+	public static void decConfig(String path, String configPath){
+		Properties properties = new Properties();
+		try{
+			InputStream inputStream = new FileInputStream(configPath);
+			properties.load(inputStream);
+			inputStream.close();
+		} catch (IOException e) {
+			System.out.println("Error opening PBE-cryptoconfig file" + e);
+		}
+        
+		PBEdecryption(path, properties.getProperty("password"), properties.getProperty("algorithm"));
+		return;
+	}
+
+
+	public static void encConfig(String path, String configPath){
+		Properties properties = new Properties();
+		try{
+			InputStream inputStream = new FileInputStream(configPath);
+			properties.load(inputStream);
+			inputStream.close();
+		} catch (IOException e) {
+			System.out.println("Error opening PBE-cryptoconfig file" + e);
+		}
+        
+		PBEencryption(path, properties.getProperty("password"), properties.getProperty("algorithm"));
+		return;
+	}
+
+
+	public static void deleteFile(String path){
+		File file = new File(path);
+		if (file.exists() && file.delete() ) {
+			System.out.println("File deleted successfully or already deleted");
+		}
+		else {
+			System.out.println("Failed to delete the file");
+		}
+	}
+
+
+	public static void PBEencryption(String path, String password, String algorithm){
+		try
+		{
+			FileInputStream inFile = new FileInputStream(path);
+			FileOutputStream outFile = new FileOutputStream(path + ".enc");
+			PBEKeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray());
+			SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance(algorithm);
+			SecretKey secretKey = secretKeyFactory.generateSecret(pbeKeySpec);
+			byte[] salt = new byte[8];
+			Random random = new Random();
+			random.nextBytes(salt);
+			PBEParameterSpec pbeParameterSpec = new PBEParameterSpec(salt, 100);
+			Cipher cipher = Cipher.getInstance(algorithm);
+			cipher.init(Cipher.ENCRYPT_MODE, secretKey, pbeParameterSpec);
+
+			outFile.write(salt);
+			
+			byte[] input = new byte[64];
+			int bytesRead;
+			while ((bytesRead = inFile.read(input)) != -1) {
+				byte[] output = cipher.update(input, 0, bytesRead);
+				if (output != null)
+					outFile.write(output);
+			}
+			byte[] output = cipher.doFinal();
+			if (output != null)
+				outFile.write(output);
+
+			inFile.close();
+			outFile.flush();
+			outFile.close();
+
+		}
+		catch (Exception e){
+			System.out.println("Errror in encryption");
+		}
+		
+	}
+
+
+	public static void PBEdecryption(String path, String password, String algorithm){
+		try
+		{
+			PBEKeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray());
+			SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance(algorithm);
+			SecretKey secretKey = secretKeyFactory.generateSecret(pbeKeySpec);
+			FileInputStream fis = new FileInputStream(path);
+			byte[] salt = new byte[8];
+			fis.read(salt);
+			PBEParameterSpec pbeParameterSpec = new PBEParameterSpec(salt, 100);
+
+			Cipher cipher = Cipher.getInstance(algorithm);
+
+			cipher.init(Cipher.DECRYPT_MODE, secretKey, pbeParameterSpec);
+
+			FileOutputStream fos = new FileOutputStream(path + ".dec");
+			byte[] in = new byte[64];
+			int read;
+			while ((read = fis.read(in)) != -1) {
+				byte[] output = cipher.update(in, 0, read);
+				if (output != null)
+					fos.write(output);
+			}
+			byte[] output = cipher.doFinal();
+
+			if (output != null)
+				fos.write(output);
+
+			fis.close();
+			fos.flush();
+			fos.close();
+
+		}
+		catch ( NoSuchAlgorithmException | BadPaddingException 
+				| IllegalBlockSizeException | InvalidAlgorithmParameterException
+				| InvalidKeyException | NoSuchPaddingException | InvalidKeySpecException
+				| IOException e){
+			System.out.println("Error in decryption: " + e);
+		}
+		
+	}
+
+
+	public static void sendNull(DatagramPacket p, DatagramSocket s){
+		byte[]  nullByte = new byte[] { 
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+			0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+			};
+
+		p.setData(nullByte, 0, nullByte.length);
+		try {
+			s.send(p);
+		} catch (IOException e) {
+			System.out.println("Something went wrong in sendNull " + e);
+		}
+	}
 
 }

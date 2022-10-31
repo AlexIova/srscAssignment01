@@ -10,11 +10,8 @@ import java.security.*;
 import javax.crypto.*;
 import javax.crypto.spec.*;
 import java.security.spec.InvalidKeySpecException;
-import java.nio.charset.StandardCharsets;
 import java.net.SocketAddress;
 import java.net.InetSocketAddress;
-import java.net.DatagramSocket;
-
 
 public class UtilsBox {
     
@@ -28,26 +25,13 @@ public class UtilsBox {
 			}
 			return b;
 		}
-		
-	
-	// Found on stackOverflow
-	private static String bytesToHex(byte[] bytes) {
-			byte[] HEX_ARRAY = "0123456789abcdef".getBytes(StandardCharsets.US_ASCII);
-			byte[] hexChars = new byte[bytes.length * 2];
-			for (int j = 0; j < bytes.length; j++) {
-				int v = bytes[j] & 0xFF;
-				hexChars[j * 2] = HEX_ARRAY[v >>> 4];
-				hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
-			}
-			return new String(hexChars, StandardCharsets.UTF_8);
-		}
 	
 
     public static ArrayList<Properties> parserProperties(String path){
 		ArrayList<Properties> listProp = new ArrayList<Properties>();
 
 		try {
-			BufferedReader br = new BufferedReader(new FileReader("./configs/config.properties"));
+			BufferedReader br = new BufferedReader(new FileReader(path));
 			StringBuilder sb = new StringBuilder();
 			String currentLine;
 
@@ -79,7 +63,7 @@ public class UtilsBox {
 	}
 
 
-	public static Properties parserCryptoConfig(String addr){
+	public static Properties parserCryptoConfig(String addr, String pathFile){
 		Properties properties = new Properties();
 
 		int colon = addr.indexOf(":");
@@ -91,7 +75,7 @@ public class UtilsBox {
 		String start = "<" + addr + ">";
 		String finish = "</" + addr + ">";
 		try {
-			BufferedReader br = new BufferedReader(new FileReader("./configs/box-cryptoconfig"));
+			BufferedReader br = new BufferedReader(new FileReader(pathFile));
 			StringBuilder sb = new StringBuilder();
 			String currentLine;
 	
@@ -128,19 +112,19 @@ public class UtilsBox {
 	}
 
 
-	public static void PBEencryption(String path, String password){
+	public static void PBEencryption(String path, String password, String algorithm){
 		try
 		{
 			FileInputStream inFile = new FileInputStream(path);
 			FileOutputStream outFile = new FileOutputStream(path + ".enc");
 			PBEKeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray());
-			SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBEWithMD5AndTripleDES");
+			SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance(algorithm);
 			SecretKey secretKey = secretKeyFactory.generateSecret(pbeKeySpec);
 			byte[] salt = new byte[8];
 			Random random = new Random();
 			random.nextBytes(salt);
 			PBEParameterSpec pbeParameterSpec = new PBEParameterSpec(salt, 100);
-			Cipher cipher = Cipher.getInstance("PBEWithMD5AndTripleDES");
+			Cipher cipher = Cipher.getInstance(algorithm);
 			cipher.init(Cipher.ENCRYPT_MODE, secretKey, pbeParameterSpec);
 
 			outFile.write(salt);
@@ -168,18 +152,18 @@ public class UtilsBox {
 	}
 
 
-	public static void PBEdecryption(String path, String password){
+	public static void PBEdecryption(String path, String password, String algorithm){
 		try
 		{
 			PBEKeySpec pbeKeySpec = new PBEKeySpec(password.toCharArray());
-			SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBEWithMD5AndTripleDES");
+			SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance(algorithm);
 			SecretKey secretKey = secretKeyFactory.generateSecret(pbeKeySpec);
 			FileInputStream fis = new FileInputStream(path);
 			byte[] salt = new byte[8];
 			fis.read(salt);
 			PBEParameterSpec pbeParameterSpec = new PBEParameterSpec(salt, 100);
 
-			Cipher cipher = Cipher.getInstance("PBEWithMD5AndTripleDES");
+			Cipher cipher = Cipher.getInstance(algorithm);
 
 			cipher.init(Cipher.DECRYPT_MODE, secretKey, pbeParameterSpec);
 
@@ -309,7 +293,6 @@ public class UtilsBox {
 
 
 	public static void getSetup(ArrayList<Properties> listAddr, 
-								ArrayList<Properties> listConfigServer,
 								ArrayList<DatagramSocket> inSocketSet, 
 								ArrayList<DatagramSocket> outSocketSet){
 
@@ -317,7 +300,6 @@ public class UtilsBox {
 		ArrayList<SocketAddress> outSocketAddressSet = new ArrayList<SocketAddress>();
 
 		for (Properties propAddr : listAddr){
-			listConfigServer.add(UtilsBox.parserCryptoConfig(propAddr.getProperty("remote")));		// get cryptoconfigs
 			inSocketAdressSet.add(parseSocketAddress(propAddr.getProperty("remote")));				// get addr remote
 			outSocketAddressSet.add(parseSocketAddress(propAddr.getProperty("localdelivery")));		// get addr local
 		}	
@@ -350,6 +332,7 @@ public class UtilsBox {
         return new InetSocketAddress(host, port);
     }
 
+
 	public static void timeoutSock(ArrayList<DatagramSocket> inSocketSet, int time){
 		for(DatagramSocket inSock : inSocketSet){
 			try {
@@ -359,4 +342,45 @@ public class UtilsBox {
 			}
 		}
 	}
+
+
+	public static void decConfig(String path, String configPath){
+		Properties properties = new Properties();
+		try{
+			InputStream inputStream = new FileInputStream(configPath);
+			properties.load(inputStream);
+			inputStream.close();
+		} catch (IOException e) {
+			System.out.println("Error opening PBE-cryptoconfig file" + e);
+		}
+        
+		PBEdecryption(path, properties.getProperty("password"), properties.getProperty("algorithm"));
+		return;
+	}
+
+
+	public static void encConfig(String path, String configPath){
+		Properties properties = new Properties();
+		try{
+			InputStream inputStream = new FileInputStream(configPath);
+			properties.load(inputStream);
+			inputStream.close();
+		} catch (IOException e) {
+			System.out.println("Error opening PBE-cryptoconfig file" + e);
+		}
+        
+		PBEencryption(path, properties.getProperty("password"), properties.getProperty("algorithm"));
+		return;
+	}
+
+	public static void deleteFile(String path){
+		File file = new File(path);
+		if (file.exists() && file.delete() ) {
+			System.out.println("File deleted successfully or already deleted");
+		}
+		else {
+			System.out.println("Failed to delete the file");
+		}
+	}
+
 }

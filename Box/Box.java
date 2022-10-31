@@ -32,11 +32,8 @@ class Box {
     
     public static void main(String[] args) throws Exception {
 
-		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());  // This is to make BC work
+		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());  // Necessary to use BC algorithms
 
-		// Need these variables for instrumentation metrics on
-		// received and processed streams delivered to the
-		// media player
 		String csuite; // used cyphersuite to process the received stream
 		String k;   // The key used, in Hexadecimal representation
         int ksize;  // The key size
@@ -53,34 +50,19 @@ class Box {
 		String mackey;
 		String iv;
 		
-		// can add more instrumentation variables considered as interesting
-
 		int BUFF_SIZE = 8192;
-	
-        InputStream inputStream = new FileInputStream("configs/config.properties");
-        if (inputStream == null) {
-            System.err.println("Configuration file not found!");
-            System.exit(1);
-        }
-        Properties properties = new Properties();
-        properties.load(inputStream);
 
-		/* <PBE> */
-		/*
-		PBEencryption("configs/box-cryptoconfig", "password");
-		PBEdecryption("configs/box-cryptoconfig.enc", "password");
-		System.exit(-1);
-		*/
-		/* </PBE> */
+		UtilsBox.decConfig("./configs/config.properties.enc", "./configs/PBE-cryptoconfig");
+		
 
+		ArrayList<Properties> listAddr = UtilsBox.parserProperties("configs/config.properties.enc.dec");
 
+		UtilsBox.deleteFile("configs/config.properties.enc.dec");
 
-		ArrayList<Properties> listAddr = UtilsBox.parserProperties("configs/config.properties");
-		ArrayList<Properties> listConfigServer = new ArrayList<Properties>();
 		ArrayList<DatagramSocket> inSocketSet = new ArrayList<DatagramSocket>();
 		ArrayList<DatagramSocket> outSocketSet = new ArrayList<DatagramSocket>();	
 
-		UtilsBox.getSetup(listAddr, listConfigServer, inSocketSet, outSocketSet);
+		UtilsBox.getSetup(listAddr, inSocketSet, outSocketSet);
 
 		byte[] buffer = new byte[BUFF_SIZE * 3];
 
@@ -102,7 +84,6 @@ class Box {
 
 
 		while (true){
-			System.out.println("08");
 
 			UtilsBox.timeoutSock(inSocketSet, 100);
 
@@ -110,13 +91,9 @@ class Box {
 			while (!start){
 				for(DatagramSocket inSock : inSocketSet){
 					try{
-						System.out.println("01");
 						inSock.receive(inPacket);
-						//if(inPacket.getData().equals(buffer)){
 						inConn = inSock;
 						start = true;
-						System.out.println("TROVATO");
-						// }
 					} catch (Exception e){
 						continue;
 					}
@@ -125,17 +102,18 @@ class Box {
 
 			start = true;
 
-			System.out.println("02");
 			outConnData = UtilsBox.findOutSocket(inConn, inSocketSet, outSocketSet);
-			System.out.println("03");
-			System.out.println("Local address: " + outConnData.getLocalAddress() + "\n Local port: " + outConnData.getLocalPort());
 			outAddress = new InetSocketAddress(outConnData.getLocalAddress(), outConnData.getLocalPort());
 			outConn =  new DatagramSocket();
 			outConnData.close();
 			inConn.setSoTimeout(0);		// Don't care about timeout now
+			
+			UtilsBox.decConfig("./configs/box-cryptoconfig.enc", "./configs/PBE-cryptoconfig");
 
-			System.out.println("04");
-			Properties propStream = UtilsBox.parserCryptoConfig(inConn.getLocalAddress().toString().substring(1) + ":" + String.valueOf(inConn.getLocalPort()));
+			Properties propStream = UtilsBox.parserCryptoConfig(inConn.getLocalAddress().toString().substring(1) + ":" + String.valueOf(inConn.getLocalPort()), 
+																	"./configs/box-cryptoconfig.enc.dec");
+
+			UtilsBox.deleteFile("./configs/box-cryptoconfig.enc.dec");
 
 			csuite = propStream.getProperty("ciphersuite");
 			k = propStream.getProperty("key");
@@ -143,7 +121,6 @@ class Box {
 			mackey = propStream.getProperty("Mackey");
 			iv = propStream.getProperty("iv");
 
-			System.out.println("05");
 			Cipher c = UtilsBox.prepareCipher(csuite, k, iv);
 			if (mackey.equals("NULL") && hic.equals("NULL") ){
 				;	// Integrity already provided
@@ -162,14 +139,9 @@ class Box {
 			int sizeTot = 0;
 
 			while (true) {
-
 				boolean ok = false;
-
-				System.out.print("06");
 				inConn.receive(inPacket);
-
 				if (UtilsBox.isFinished(inPacket)){
-					System.out.println("FINITO");
 					break;
 				}
 
@@ -207,24 +179,16 @@ class Box {
 					discarded++;
 				}
 
-
-				System.out.print("*"); 	// Just for debug. Comment for final
-										// observations and statistics
-		
+				// System.out.print("*");
 
 			}
 
-			System.out.println("07");
 			inConn.receive(inPacket);
-
 			byte[] movieB = Arrays.copyOfRange(inPacket.getData(), 0, inPacket.getLength());
-
 			movie = new String(movieB);
 
 			outConn.close();
-
 			long tEnd = System.currentTimeMillis();
-
 			int time = (int) (tEnd - tStart)/1000;
 		
 			PrinStatsBox.print(movie, csuite, hic, k, totCount, sizeTot, sizeC, sizeD, time, discarded);
